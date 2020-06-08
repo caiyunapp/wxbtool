@@ -23,6 +23,11 @@ class WxDataset(Dataset):
         self.inputs = {}
         self.targets = {}
 
+        if resolution == '5.625deg':
+            self.levels = 11
+            self.width = 32
+            self.length = 64
+
         size, dti, dto = self.init_holders(vars)
         for var, yr in product(vars, years):
             if var in vars3d:
@@ -39,11 +44,6 @@ class WxDataset(Dataset):
         self.inputs.update({v: np.concatenate(tuple(dti[v]), axis=0) for v in vars})
         self.targets.update({v: np.concatenate(tuple(dto[v]), axis=0) for v in vars})
         logger.info('total %s items loaded!', self.size)
-
-        if resolution == '5.625deg':
-            self.levels = 11
-            self.width = 32
-            self.length = 64
 
     def init_holders(self, vars):
         return 0, {k: [] for k in vars}, {k: [] for k in vars}
