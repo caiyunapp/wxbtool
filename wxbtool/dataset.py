@@ -32,6 +32,11 @@ class WxDataset(Dataset):
         self.dto = np.concatenate(tuple((np.concatenate(tuple(dto[v]), axis=0) for v in vars)), axis=1)
         logger.info('total %s items loaded!', self.size)
 
+        if resolution == '5.625deg':
+            self.levels = 11
+            self.width = 32
+            self.length = 64
+
     def init_holders(self, vars):
         return 0, {k: [] for k in vars}, {k: [] for k in vars}
 
@@ -43,7 +48,10 @@ class WxDataset(Dataset):
         logger.info('%s[%d]: %s', var, year, str(dt.shape))
 
         length = 365 * 24 - (self.input_span + self.pred_shift)
-        dti, dto = np.zeros([length // self.input_span, self.input_span, 11, 32, 64], dtype=np.float32), np.zeros([length // self.input_span, 1, 11, 32, 64], dtype=np.float32)
+        dti, dto = (
+            np.zeros([length // self.input_span, self.input_span, self.levels, self.width, self.length], dtype=np.float32),
+            np.zeros([length // self.input_span, 1, self.input_span, self.levels, self.width, self.length], dtype=np.float32)
+        )
 
         for ix in range(0, length, self.input_span):
             pt = ix // self.input_span

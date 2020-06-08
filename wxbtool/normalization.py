@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import torch as th
+
 
 def norm_gpt(x):
     min, max = -10000, 500000
@@ -12,12 +14,14 @@ def norm_tmp(x):
 
 
 def norm_shm(x):
+    x = th.relu(x)
     min, max = 0, 0.1
     return (x - min) / (max - min)
 
 
 def norm_rhm(x):
-    min, max = -10.0, 200.0
+    x = th.relu(x)
+    min, max = 0.0, 200.0
     return (x - min) / (max - min)
 
 
