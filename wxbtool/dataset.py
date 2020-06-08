@@ -58,7 +58,7 @@ class WxDataset(Dataset):
         length = 365 * 24 - (self.input_span + self.pred_shift)
         dti, dto = (
             np.zeros([length // self.input_span, self.input_span, self.width, self.length], dtype=np.float32),
-            np.zeros([length // self.input_span, 1, self.input_span, self.width, self.length], dtype=np.float32)
+            np.zeros([length // self.input_span, 1, self.width, self.length], dtype=np.float32)
         )
 
         for ix in range(0, length, self.input_span):
@@ -79,7 +79,7 @@ class WxDataset(Dataset):
         length = 365 * 24 - (self.input_span + self.pred_shift)
         dti, dto = (
             np.zeros([length // self.input_span, self.input_span, self.levels, self.width, self.length], dtype=np.float32),
-            np.zeros([length // self.input_span, 1, self.input_span, self.levels, self.width, self.length], dtype=np.float32)
+            np.zeros([length // self.input_span, 1, self.levels, self.width, self.length], dtype=np.float32)
         )
 
         for ix in range(0, length, self.input_span):
