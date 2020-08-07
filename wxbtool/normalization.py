@@ -33,6 +33,14 @@ def norm_v(x):
     return (x - min) / (max - min)
 
 
+def norm_tisr(tisr):
+    return tisr / 5500000.0
+
+
+def norm_tcc(tcc):
+    return tcc
+
+
 def denorm_gpt(x):
     return 510000 * x - 10000
 
@@ -57,6 +65,14 @@ def denorm_v(x):
     return x * 500 - 250.0
 
 
+def denorm_tisr(tisr):
+    return tisr * 5500000.0
+
+
+def denorm_tcc(tcc):
+    return tcc
+
+
 normalizors = {
     'geopotential': norm_gpt,
     'temperature': norm_tmp,
@@ -64,6 +80,9 @@ normalizors = {
     'relative_humidity': norm_rhm,
     'u_component_of_wind': norm_u,
     'v_component_of_wind': norm_v,
+    'toa_incident_solar_radiation': norm_tisr,
+    'total_cloud_cover': norm_tcc,
+    '2m_temperature': norm_tmp,
 }
 
 
@@ -74,4 +93,7 @@ denormalizors = {
     'relative_humidity': denorm_rhm,
     'u_component_of_wind': denorm_u,
     'v_component_of_wind': denorm_v,
+    'toa_incident_solar_radiation': denorm_tisr,
+    'total_cloud_cover': denorm_tcc,
+    '2m_temperature': denorm_tmp,
 }

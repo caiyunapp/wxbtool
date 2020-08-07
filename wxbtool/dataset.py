@@ -14,11 +14,13 @@ logger = logging.getLogger()
 
 
 class WxDataset(Dataset):
-    def __init__(self, root, resolution, years, vars, input_span=2, pred_shift=24):
+    def __init__(self, root, resolution, years, vars, step=1, input_span=2, pred_shift=24, pred_span=1):
         self.root = root
         self.resolution = resolution
         self.input_span = input_span
+        self.step = step
         self.pred_shift = pred_shift
+        self.pred_span = pred_span
         self.vars = vars
         self.inputs = {}
         self.targets = {}
@@ -55,19 +57,20 @@ class WxDataset(Dataset):
         dt = np.array(ds[codes[var]].data, dtype=np.float32)
         logger.info('%s[%d]: %s', var, year, str(dt.shape))
 
-        length = 365 * 24 - (self.input_span + self.pred_shift)
+        length = 365 * 24 - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
         dti, dto = (
-            np.zeros([length // self.input_span, self.input_span, self.width, self.length], dtype=np.float32),
-            np.zeros([length // self.input_span, 1, self.width, self.length], dtype=np.float32)
+            np.zeros([length, self.input_span, self.width, self.length], dtype=np.float32),
+            np.zeros([length, self.pred_span, self.width, self.length], dtype=np.float32)
         )
 
-        for ix in range(0, length, self.input_span):
-            pt = ix // self.input_span
-            dto[pt, 0, :, :] = dt[self.pred_shift + self.input_span - 1 + ix, :, :]
+        for ix in range(0, length):
+            pt = ix
             for jx in range(self.input_span):
-                dti[pt, jx, :, :] = dt[ix + jx, :, :]
+                dti[pt, jx, :, :] = dt[ix + jx * self.step, :, :]
+            for kx in range(self.pred_span):
+                dto[pt, kx, :, :] = dt[ix + self.pred_shift + kx * self.step, :, :]
 
-        return length // self.input_span, normalizors[var](dti), normalizors[var](dto)
+        return length, normalizors[var](dti), normalizors[var](dto)
 
     def load_3ddata(self, year, var):
         data_path = '%s/%s/%s_%d_%s.nc' % (self.root, var, var, year, self.resolution)
@@ -76,19 +79,20 @@ class WxDataset(Dataset):
         dt = np.array(ds[codes[var]].data, dtype=np.float32)
         logger.info('%s[%d]: %s', var, year, str(dt.shape))
 
-        length = 365 * 24 - (self.input_span + self.pred_shift)
+        length = 365 * 24 - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
         dti, dto = (
-            np.zeros([length // self.input_span, self.input_span, self.levels, self.width, self.length], dtype=np.float32),
-            np.zeros([length // self.input_span, 1, self.levels, self.width, self.length], dtype=np.float32)
+            np.zeros([length, self.input_span, self.levels, self.width, self.length], dtype=np.float32),
+            np.zeros([length, self.pred_span, self.levels, self.width, self.length], dtype=np.float32)
         )
 
         for ix in range(0, length, self.input_span):
-            pt = ix // self.input_span
-            dto[pt, 0, :, :, :] = dt[self.pred_shift + self.input_span - 1 + ix, :, :, :]
+            pt = ix
             for jx in range(self.input_span):
-                dti[pt, jx, :, :, :] = dt[ix + jx, :, :, :]
+                dti[pt, jx, :, :, :] = dt[ix + jx * self.step, :, :, :]
+            for kx in range(self.pred_span):
+                dto[pt, kx, :, :, :] = dt[ix + self.pred_shift + kx * self.step, :, :, :]
 
-        return length // self.input_span, normalizors[var](dti), normalizors[var](dto)
+        return length, normalizors[var](dti), normalizors[var](dto)
 
     def __len__(self):
         return self.size
