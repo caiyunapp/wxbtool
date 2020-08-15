@@ -18,4 +18,4 @@ class Evaluator:
 
     def weighted_rmse(self, ground_truth, forcast):
         err = forcast - ground_truth
-        return np.sqrt(np.mean(self.weight * err * err))
+        return np.sqrt(np.mean(self.weight * err * err) + 1e-10)

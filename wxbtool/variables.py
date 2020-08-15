@@ -5,6 +5,7 @@ vars2d = [
     '10m_u_component_of_wind', '10m_v_component_of_wind',
     'total_cloud_cover', 'total_precipitation',
     'toa_incident_solar_radiation',
+    'temperature_850hPa',
 ]
 
 vars3d = [
@@ -17,6 +18,7 @@ vars3d = [
 codes = {
     'geopotential': 'z',
     'temperature': 't',
+    'temperature_850hPa': 't850',
     'specific_humidity': 'q',
     'relative_humidity': 'r',
     'u_component_of_wind': 'u',
