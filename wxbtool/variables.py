@@ -18,7 +18,7 @@ vars3d = [
 codes = {
     'geopotential': 'z',
     'temperature': 't',
-    'temperature_850hPa': 't850',
+    'temperature_850hPa': 't',
     'specific_humidity': 'q',
     'relative_humidity': 'r',
     'u_component_of_wind': 'u',
