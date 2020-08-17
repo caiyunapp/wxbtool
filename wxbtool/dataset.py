@@ -85,7 +85,7 @@ class WxDataset(Dataset):
             np.zeros([length, self.pred_span, self.levels, self.width, self.length], dtype=np.float32)
         )
 
-        for ix in range(0, length, self.input_span):
+        for ix in range(0, length):
             pt = ix
             for jx in range(self.input_span):
                 dti[pt, jx, :, :, :] = dt[ix + jx * self.step, :, :, :]

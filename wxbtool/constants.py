@@ -55,7 +55,7 @@ def load_area_weight(resolution, root):
     ds = xr.open_dataset(data_path)
     ds = ds.transpose('lat', 'lon')
     lat = np.array(ds['lat2d'].data, dtype=np.float64)
-    dt = np.cos(lat)
+    dt = np.cos(lat * np.pi / 180)
     dt = dt / dt.mean()
     return dt
 
