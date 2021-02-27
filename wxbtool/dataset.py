@@ -70,7 +70,7 @@ class WxDataset(Dataset):
             for kx in range(self.pred_span):
                 dto[pt, kx, :, :] = dt[ix + self.pred_shift + kx * self.step, :, :]
 
-        return length, normalizors[var](dti), normalizors[var](dto)
+        return length, dti, dto
 
     def load_3ddata(self, year, var):
         data_path = '%s/%s/%s_%d_%s.nc' % (self.root, var, var, year, self.resolution)
@@ -92,7 +92,7 @@ class WxDataset(Dataset):
             for kx in range(self.pred_span):
                 dto[pt, kx, :, :, :] = dt[ix + self.pred_shift + kx * self.step, :, :, :]
 
-        return length, normalizors[var](dti), normalizors[var](dto)
+        return length, dti, dto
 
     def __len__(self):
         return self.size
