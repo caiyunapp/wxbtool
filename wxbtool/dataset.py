@@ -26,7 +26,7 @@ class WxDataset(Dataset):
         self.targets = {}
 
         if resolution == '5.625deg':
-            self.levels = 11
+            self.levels = 13
             self.width = 32
             self.length = 64
 
