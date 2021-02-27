@@ -43,8 +43,14 @@ class WxDataset(Dataset):
             dto[var].append(cho)
 
         self.size = size // len(vars)
-        self.inputs.update({v: np.concatenate(tuple(dti[v]), axis=0) for v in vars})
-        self.targets.update({v: np.concatenate(tuple(dto[v]), axis=0) for v in vars})
+        for v in vars:
+            input = np.concatenate(tuple(dti[v]), axis=0)
+            target = np.concatenate(tuple(dto[v]), axis=0)
+            dti[v] = None
+            dto[v] = None
+
+            self.inputs[v] = input
+            self.targets[v] = target
         logger.info('total %s items loaded!', self.size)
 
     def init_holders(self, vars):
