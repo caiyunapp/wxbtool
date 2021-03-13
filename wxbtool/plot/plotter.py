@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 
 from threading import local
+from wxbtool.plot.cmaps import cmaps
 
 data = local()
 
@@ -29,5 +30,5 @@ def imsave(fileobj, data):
     fileobj.write(buffer)
 
 
-def plot(fileobj, data, cmap='copper'):
+def plot(fileobj, data, cmap='coolwarm'):
     imsave(fileobj, colorize(data, imgdata(), cmap))
