@@ -10,10 +10,8 @@ from pathlib import Path
 import arrow
 import numpy as np
 import torch as th
-import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from models import eva
 from plot.plotter import plot
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)

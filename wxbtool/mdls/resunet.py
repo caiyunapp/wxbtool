@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-
+ Demo model in wxbtool package
 '''
 
 import logging
@@ -27,7 +27,7 @@ def linear(in_channels, out_channels, **kwargs):
 
 
 class Setting:
-    def __init__(self, root='weatherbench/5.625deg/', resolution='5.625deg', name='test'):
+    def __init__(self, root='weatherbench/5.625deg/', resolution='5.625deg', name='resunet'):
         self.root = root
         self.resolution = resolution
 
