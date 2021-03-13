@@ -2,6 +2,20 @@
 
 A toolkit for WeatherBench based on PyTorch
 
+Install
+--------
+
+```bash
+pip install wxbtool
+```
+
+How to use
+-----------
+
+* quick start
+* develop your own model
+* train and test a model
+
 How to release
 ---------------
 

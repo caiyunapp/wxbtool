@@ -1,5 +1,7 @@
 nose
 
+arrow
+
 numpy
 torch
 
@@ -7,5 +9,7 @@ netcdf4
 toolz
 dask
 xarray
+
+leibniz
 
 opencv-python

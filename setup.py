@@ -32,6 +32,8 @@ setuptools.setup(
         'dask',
         'xarray',
         'opencv-python',
+        'arrow',
+        'leibniz',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
