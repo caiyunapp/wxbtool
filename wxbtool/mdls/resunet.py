@@ -106,12 +106,12 @@ class ResUNetModel(Base2d):
         ), dim=1)
 
     def get_targets(self, **kwargs):
-        t850 = norm_t850(kwargs['temperature'].view(-1, 1, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')])
+        t850 = kwargs['temperature'].view(-1, 1, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')]
         t850 = self.augment_data(t850)
         return {'t850': t850}, t850
 
     def get_results(self, **kwargs):
-        t850 = kwargs['t850']
+        t850 = denorm_t850(kwargs['t850'])
         return {'t850': t850}, t850
 
     def forward(self, **kwargs):
@@ -133,8 +133,8 @@ class ResUNetModel(Base2d):
     def lossfun(self, inputs, result, target):
         _, rst = self.get_results(**result)
         _, tgt = self.get_targets(**target)
-        rst = self.weight * denorm_t850(rst).view(-1, 1, 32, 64)
-        tgt = self.weight * denorm_t850(tgt).view(-1, 1, 32, 64)
+        rst = self.weight * rst.view(-1, 1, 32, 64)
+        tgt = self.weight * tgt.view(-1, 1, 32, 64)
 
         losst = mse(rst[:, 0], tgt[:, 0])
 
