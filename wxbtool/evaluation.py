@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import wxbtool.constants as cnst
+import wxbtool.data.constants as cnst
 
 
 class Evaluator:

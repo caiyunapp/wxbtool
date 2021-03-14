@@ -7,7 +7,7 @@ import logging
 from itertools import product
 from torch.utils.data import Dataset
 
-from wxbtool.variables import codes, vars2d, vars3d
+from wxbtool.data.variables import codes, vars2d, vars3d
 
 logger = logging.getLogger()
 

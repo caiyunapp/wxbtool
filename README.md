@@ -13,8 +13,10 @@ How to use
 -----------
 
 * quick start
-* develop your own model
-* train and test a model
+* understanding the physical process by plotting
+* develop your own neural model
+* try a toy physical model
+* explore the possibility to combine neural and physical model together
 
 How to release
 ---------------
