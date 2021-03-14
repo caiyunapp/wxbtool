@@ -1,6 +1,8 @@
 # wxbtool
 
-A toolkit for WeatherBench based on PyTorch (Work in progress)
+A toolkit for WeatherBench based on PyTorch
+
+Warning: This project is at its early stage and the api is not very stable
 
 Install
 --------
