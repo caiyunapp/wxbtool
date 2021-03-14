@@ -169,7 +169,7 @@ def train_model(mdl):
                 _, rst = mdm.model.get_results(**results)
                 tgt = tgt.detach().cpu().numpy().reshape(-1, 1, 32, 64)
                 rst = rst.detach().cpu().numpy().reshape(-1, 1, 32, 64)
-                rmse = np.sqrt(np.mean(mdm.model.weight * (rst - tgt) * (rst - tgt)))
+                rmse = np.sqrt(np.mean(mdm.model.weight.cpu().numpy() * (rst - tgt) * (rst - tgt)))
                 logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()} | Temperature RMSE: {rmse}')
                 rmse_per_epoch_t += np.nan_to_num(rmse * list(results.values())[0].size()[0])
 
