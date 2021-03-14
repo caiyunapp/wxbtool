@@ -48,7 +48,7 @@ class ModelSetting(Setting):
         # The code of variables in input features
         self.vars_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
         # The code of variables in output
-        self.vars_out = ['t850', 'z500']
+        self.vars_out = ['t850']
 
         # temporal scopes for train
         self.years_train = [
