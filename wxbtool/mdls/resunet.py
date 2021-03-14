@@ -16,6 +16,7 @@ from leibniz.unet.hyperbolic import HyperBottleneck
 import wxbtool.config as config
 
 from wxbtool.norms.meanstd import *
+from wxbtool.nn.setting import Setting
 from wxbtool.nn.model import Base2d
 
 logger = logging.getLogger()
@@ -28,8 +29,9 @@ def linear(in_channels, out_channels, **kwargs):
     return nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
 
 
-class ModelSetting:
+class ModelSetting(Setting):
     def __init__(self):
+        super().__init__()
         self.root = config.root         # The root path of WeatherBench Dataset, inject from config
         self.resolution = '5.625deg'    # The spatial resolution of the model
 
@@ -43,28 +45,30 @@ class ModelSetting:
         self.levels = ['300', '500', '700', '850', '1000'] # Which vertical levels to choose
         self.height = len(self.levels)                     # How many vertical levels to choose
 
-        # The name of variables to choose, both input and output features
+        # The name of variables to choose, for both input features and output
         self.vars = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature', 'total_cloud_cover']
 
-        # The code of the variables in input features
+        # The code of variables in input features
         self.vars_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
-        # The code of the variables in output features
+        # The code of variables in output
         self.vars_out = ['t850', 'z500']
 
+        # temporal scopes for train
         self.years_train = [
             1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989,
             1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
             2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
             2010, 2011, 2012, 2013, 2014,
         ]
+        # temporal scopes for test
         self.years_test = [2015]
+        # temporal scopes for evaluation
         self.years_eval = [2016, 2017, 2018]
 
 
 class ResUNetModel(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
-
         tube = hyptub(1664, 832, 1664, encoder=linear, decoder=linear)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
@@ -140,4 +144,5 @@ class ResUNetModel(Base2d):
         return losst
 
 
-model = ResUNetModel(ModelSetting())
+setting = ModelSetting()
+model = ResUNetModel(setting)

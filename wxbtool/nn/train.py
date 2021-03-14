@@ -29,7 +29,7 @@ parser.add_argument("-c", "--n_cpu", type=int, default=64, help="number of cpu t
 parser.add_argument("-b", "--batch_size", type=int, default=64, help="size of the batches")
 parser.add_argument("-e", "--epoch", type=int, default=0, help="current epoch to start training from")
 parser.add_argument("-n", "--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("-m", "--module", type=str, default='', help="module of the metrological model to load")
+parser.add_argument("-m", "--module", type=str, default='wxbtool.mdls.resunet', help="module of the metrological model to load")
 parser.add_argument("-l", "--load", type=str, default='', help="dump file of the metrological model to load")
 parser.add_argument("-k", "--check", type=str, default='', help="checkpoint file to load")
 opt = parser.parse_args()
@@ -41,13 +41,20 @@ print('cudnn:', th.backends.cudnn.version())
 np.core.arrayprint._line_width = 150
 np.set_printoptions(linewidth=np.inf)
 
-name = opt.model
 early_stopping = 5
 best = np.inf
 count = 0
 
+mdm = None
+try:
+    mdm = importlib.import_module(opt.module, package=None)
+except ImportError as e:
+    print('failure when loading model')
+    exit(1)
+
+name = mdm.model.setting.name
 time_str = arrow.now().format('YYYYMMDD_HHmmss')
-model_path = Path(f'./models/{name}-{time_str}')
+model_path = Path(f'./trains/{name}-{time_str}')
 model_path.mkdir(exist_ok=True)
 log_file = model_path / Path('train.log')
 
@@ -56,25 +63,19 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.info(str(opt))
 
-mdm = None
-try:
-    mdm = importlib.import_module('models.%s' % name, package=None)
-except ImportError as e:
-    logger.exception(e)
-    exit(1)
 
 scheduler = None
 
 
 def train_model(mdl):
     global scheduler
-    optimizer = th.optim.Adam(mdl.parameters(), lr=2e-3)
+    optimizer = th.optim.Adam(mdl.parameters(), lr=1e-3)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     try:
-        if opt.check != '':
-            checkpoint = th.load(opt.check, map_location='cpu')
-            mdm.model.load_state_dict(checkpoint)
+        if opt.load != '':
+            dump = th.load(opt.load, map_location='cpu')
+            mdm.model.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
         exit(1)
@@ -84,36 +85,31 @@ def train_model(mdl):
 
     def train(epoch, mdl):
         mdl.train()
-        dataloader = DataLoader(mdm.dataset_train, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
+        dataloader = DataLoader(mdm.model.dataset_train, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
         loss_per_epoch = 0.0
         for step, sample in enumerate(dataloader):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.vars
+                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.setting.vars
             }
             targets = {
-                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.vars
+                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.setting.vars
             }
 
             if th.cuda.is_available():
                 inputs = {
-                    v: inputs[v].cuda() for v in mdm.vars
+                    v: inputs[v].cuda() for v in mdm.setting.vars
                 }
                 targets = {
-                    v: targets[v].cuda() for v in mdm.vars
+                    v: targets[v].cuda() for v in mdm.setting.vars
                 }
                 mdm.model.constant = mdm.model.constant.cuda()
-                if 'weight' in dir(mdm.model):
-                    mdm.model.weight = mdm.model.weight.cuda()
-                if 'ones' in dir(mdm.model):
-                    mdm.model.ones = mdm.model.ones.cuda()
-                if 'sphere' in dir(mdm.model):
-                    mdm.model.sphere = mdm.model.sphere.cuda()
+                mdm.model.weight = mdm.model.weight.cuda()
 
             optimizer.zero_grad()
             results = mdl(*[], **inputs)
-            loss = mdm.lossfun(inputs, results, targets)
+            loss = mdm.model.lossfun(inputs, results, targets)
             loss.backward()
             optimizer.step()
 
@@ -121,7 +117,7 @@ def train_model(mdl):
 
             loss_per_epoch += loss.item() * list(results.values())[0].size()[0]
 
-        logger.info(f'Epoch: {epoch + 1:03d} | Train Loss: {loss_per_epoch / mdm.train_size}')
+        logger.info(f'Epoch: {epoch + 1:03d} | Train Loss: {loss_per_epoch / mdm.model.train_size}')
 
         # evaluation
         loss_eval = evaluate(epoch)
@@ -140,37 +136,32 @@ def train_model(mdl):
 
     def evaluate(epoch):
         mdl.eval()
-        dataloader = DataLoader(mdm.dataset_eval, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
+        dataloader = DataLoader(mdm.model.dataset_eval, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
         loss_per_epoch = 0.0
         rmse_per_epoch_t = 0.0
         for step, sample in enumerate(dataloader):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.vars
+                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.model.vars
             }
             targets = {
-                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.vars
+                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.model.vars
             }
 
             if th.cuda.is_available():
                 inputs = {
-                    v: inputs[v].cuda() for v in mdm.vars
+                    v: inputs[v].cuda() for v in mdm.model.vars
                 }
                 targets = {
-                    v: targets[v].cuda() for v in mdm.vars
+                    v: targets[v].cuda() for v in mdm.model.vars
                 }
                 mdm.model.constant = mdm.model.constant.cuda()
-                if 'weight' in dir(mdm.model):
-                    mdm.model.weight = mdm.model.weight.cuda()
-                if 'ones' in dir(mdm.model):
-                    mdm.model.ones = mdm.model.ones.cuda()
-                if 'sphere' in dir(mdm.model):
-                    mdm.model.sphere = mdm.model.sphere.cuda()
+                mdm.model.weight = mdm.model.weight.cuda()
 
             with th.no_grad():
                 results = mdl(*[], **inputs)
-                loss = mdm.lossfun(inputs, results, targets)
+                loss = mdm.model.lossfun(inputs, results, targets)
                 logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()}')
                 loss_per_epoch += loss.item() * list(results.values())[0].size()[0]
 
@@ -183,19 +174,19 @@ def train_model(mdl):
                     f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()} | Temperature RMSE: {rmse}')
                 rmse_per_epoch_t += np.nan_to_num(rmse * list(results.values())[0].size()[0])
 
-        rmse_total = rmse_per_epoch_t / mdm.eval_size
-        logger.info(f'Epoch: {epoch + 1:03d} | Eval Loss: {loss_per_epoch / mdm.eval_size}')
+        rmse_total = rmse_per_epoch_t / mdm.model.eval_size
+        logger.info(f'Epoch: {epoch + 1:03d} | Eval Loss: {loss_per_epoch / mdm.model.eval_size}')
         logger.info(f'Epoch: {epoch + 1:03d} | Eval RMSE: {rmse_total}')
 
         vars_in, _ = mdm.model.get_inputs(**inputs)
-        for bas, var in enumerate(mdm.vars_in):
-            for ix in range(mdm.input_span):
+        for bas, var in enumerate(mdm.model.vars_in):
+            for ix in range(mdm.setting.input_span):
                 img = vars_in[var][0, ix].detach().cpu().numpy().reshape(32, 64)
                 plot(var, open('%s_inp_%d.png' % (var, ix), mode='wb'), img)
 
         vars_fc, _ = mdm.model.get_results(**results)
         vars_tg, _ = mdm.model.get_targets(**targets)
-        for bas, var in enumerate(mdm.vars_out):
+        for bas, var in enumerate(mdm.setting.vars_out):
             fcst = vars_fc[var][0].detach().cpu().numpy().reshape(32, 64)
             tgrt = vars_tg[var][0].detach().cpu().numpy().reshape(32, 64)
             plot(var, open('%s_fcs.png' % var, mode='wb'), fcst)
@@ -226,7 +217,7 @@ def train_model(mdl):
 
 if __name__ == '__main__':
     if mdm != None:
-        mdm.load_dataset('train')
+        mdm.model.load_dataset('train')
         if len(opt.gpu.split(',')) > 0:
             train_model(nn.DataParallel(mdm.model, output_device=0))
         else:
