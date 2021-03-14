@@ -133,8 +133,8 @@ class ResUNetModel(Base2d):
     def lossfun(self, inputs, result, target):
         _, rst = self.get_results(**result)
         _, tgt = self.get_targets(**target)
-        rst = self.weight * rst.view(-1, 1, 32, 64)
-        tgt = self.weight * tgt.view(-1, 1, 32, 64)
+        rst = self.weight * denorm_t850(rst).view(-1, 1, 32, 64)
+        tgt = self.weight * denorm_t850(tgt).view(-1, 1, 32, 64)
 
         losst = mse(rst[:, 0], tgt[:, 0])
 
