@@ -13,8 +13,6 @@ from leibniz.nn.net import resunet, hyptub
 from leibniz.nn.activation import CappingRelu
 from leibniz.unet.hyperbolic import HyperBottleneck
 
-import wxbtool.config as config
-
 from wxbtool.norms.meanstd import *
 from wxbtool.nn.setting import Setting
 from wxbtool.nn.model import Base2d
@@ -32,7 +30,6 @@ def linear(in_channels, out_channels, **kwargs):
 class ModelSetting(Setting):
     def __init__(self):
         super().__init__()
-        self.root = config.root         # The root path of WeatherBench Dataset, inject from config
         self.resolution = '5.625deg'    # The spatial resolution of the model
 
         self.name = 'resunet'           # The name of the model

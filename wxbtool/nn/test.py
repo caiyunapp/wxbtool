@@ -49,7 +49,7 @@ except ImportError as e:
 name = mdm.model.setting.name
 time_str = arrow.now().format('YYYYMMDD_HHmmss')
 model_path = Path(f'./trains/{name}-{time_str}')
-model_path.mkdir(exist_ok=True)
+model_path.mkdir(exist_ok=True, parents=True)
 log_file = model_path / Path('train.log')
 
 logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')

@@ -1,11 +1,12 @@
+import wxbtool.config as config
 
 
 class Setting:
-    def __init__(self, root='weatherbench/5.625deg/', resolution='5.625deg', name='test'):
-        self.root = root
-        self.resolution = resolution
+    def __init__(self):
+        self.root = config.root         # The root path of WeatherBench Dataset, inject from config
+        self.resolution = '5.625deg'    # The spatial resolution of the model
 
-        self.name = name
+        self.name = 'test'              # The name of the model
 
         self.step = 4
         self.input_span = 3
