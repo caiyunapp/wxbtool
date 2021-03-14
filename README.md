@@ -14,7 +14,7 @@ pip install wxbtool
 How to use
 -----------
 
-* quick start
+* [quick start](https://github.com/caiyunapp/wxbtool/wiki/quick-start)
 * understanding the physical process by plotting
 * develop your own neural model
 * try a toy physical model
