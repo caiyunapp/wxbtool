@@ -143,18 +143,18 @@ def train_model(mdl):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.model.vars
+                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.setting.vars
             }
             targets = {
-                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.model.vars
+                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.setting.vars
             }
 
             if th.cuda.is_available():
                 inputs = {
-                    v: inputs[v].cuda() for v in mdm.model.vars
+                    v: inputs[v].cuda() for v in mdm.setting.vars
                 }
                 targets = {
-                    v: targets[v].cuda() for v in mdm.model.vars
+                    v: targets[v].cuda() for v in mdm.setting.vars
                 }
                 mdm.model.constant = mdm.model.constant.cuda()
                 mdm.model.weight = mdm.model.weight.cuda()
@@ -179,7 +179,7 @@ def train_model(mdl):
         logger.info(f'Epoch: {epoch + 1:03d} | Eval RMSE: {rmse_total}')
 
         vars_in, _ = mdm.model.get_inputs(**inputs)
-        for bas, var in enumerate(mdm.model.vars_in):
+        for bas, var in enumerate(mdm.setting.vars_in):
             for ix in range(mdm.setting.input_span):
                 img = vars_in[var][0, ix].detach().cpu().numpy().reshape(32, 64)
                 plot(var, open('%s_inp_%d.png' % (var, ix), mode='wb'), img)

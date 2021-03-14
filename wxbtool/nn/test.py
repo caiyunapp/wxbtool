@@ -118,7 +118,7 @@ def test_model(mdl):
         logger.info(f'Test RMSE: {rmse_total}')
 
         vars_in, _ = mdm.model.get_inputs(**inputs)
-        for bas, var in enumerate(mdm.model.vars_in):
+        for bas, var in enumerate(mdm.setting.vars_in):
             for ix in range(mdm.setting.input_span):
                 img = vars_in[var][0, ix].detach().cpu().numpy().reshape(32, 64)
                 plot(var, open('%s_inp_%d.png' % (var, ix), mode='wb'), img)
