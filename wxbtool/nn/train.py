@@ -16,7 +16,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
-from plot.plotter import plot
+from wxbtool.plot.plotter import plot
 
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)

@@ -13,6 +13,8 @@ from leibniz.nn.net import resunet, hyptub
 from leibniz.nn.activation import CappingRelu
 from leibniz.unet.hyperbolic import HyperBottleneck
 
+import wxbtool.config as config
+
 from wxbtool.norms.meanstd import *
 from wxbtool.nn.model import Base2d
 
@@ -26,23 +28,27 @@ def linear(in_channels, out_channels, **kwargs):
     return nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
 
 
-class Setting:
-    def __init__(self, root='weatherbench/5.625deg/', resolution='5.625deg', name='resunet'):
-        self.root = root
-        self.resolution = resolution
+class ModelSetting:
+    def __init__(self):
+        self.root = config.root         # The root path of WeatherBench Dataset, inject from config
+        self.resolution = '5.625deg'    # The spatial resolution of the model
 
-        self.name = name
+        self.name = 'resunet'           # The name of the model
 
-        self.step = 4
-        self.input_span = 3
-        self.pred_span = 1
-        self.pred_shift = 72
+        self.step = 4                   # How many hours of a hourly step which all features in organized temporally
+        self.input_span = 3             # How many hourly steps for an input
+        self.pred_span = 1              # How many hourly steps for a prediction
+        self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
-        self.levels = ['300', '500', '700', '850', '1000']
-        self.height = len(self.levels)
+        self.levels = ['300', '500', '700', '850', '1000'] # Which vertical levels to choose
+        self.height = len(self.levels)                     # How many vertical levels to choose
 
-        self.data = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature', 'total_cloud_cover']
+        # The name of variables to choose, both input and output features
+        self.vars = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature', 'total_cloud_cover']
+
+        # The code of the variables in input features
         self.vars_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
+        # The code of the variables in output features
         self.vars_out = ['t850', 'z500']
 
         self.years_train = [
@@ -55,7 +61,7 @@ class Setting:
         self.years_eval = [2016, 2017, 2018]
 
 
-class MultiVarForecast(Base2d):
+class ResUNetModel(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
 
@@ -67,14 +73,14 @@ class MultiVarForecast(Base2d):
                             block=HyperBottleneck, relu=CappingRelu(), enhencer=tube,
                             final_normalized=False)
 
-    def get_inputs(self, **pwargs):
-        z500 = norm_z500(pwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
-        z1000 = norm_z1000(pwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])
-        tau = norm_tau(pwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('300')] - pwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('700')])
-        t850 = norm_t850(pwargs['temperature'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')])
-        tcc = norm_tcc(pwargs['total_cloud_cover'].view(-1, self.setting.input_span, 32, 64))
-        t2m = norm_t2m(pwargs['2m_temperature'].view(-1, self.setting.input_span, 32, 64))
-        tisr = norm_tisr(pwargs['toa_incident_solar_radiation'].view(-1, self.setting.input_span, 32, 64))
+    def get_inputs(self, **kwargs):
+        z500 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
+        z1000 = norm_z1000(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])
+        tau = norm_tau(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('300')] - kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('700')])
+        t850 = norm_t850(kwargs['temperature'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')])
+        tcc = norm_tcc(kwargs['total_cloud_cover'].view(-1, self.setting.input_span, 32, 64))
+        t2m = norm_t2m(kwargs['2m_temperature'].view(-1, self.setting.input_span, 32, 64))
+        tisr = norm_tisr(kwargs['toa_incident_solar_radiation'].view(-1, self.setting.input_span, 32, 64))
 
         z500 = self.augment_data(z500)
         z1000 = self.augment_data(z1000)
@@ -132,3 +138,6 @@ class MultiVarForecast(Base2d):
         losst = mse(rst[:, 0], tgt[:, 0])
 
         return losst
+
+
+model = ResUNetModel(ModelSetting())
