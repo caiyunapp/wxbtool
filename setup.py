@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="wxbtool",
-    version="0.0.13",
+    version="0.0.14",
     author="Mingli Yuan",
     author_email="mingli.yuan@gmail.com",
     description="A toolkit for WeatherBench based on PyTorch",
@@ -33,6 +33,7 @@ setuptools.setup(
         'xarray',
         'opencv-python',
         'arrow',
+        'python-decouple',
         'leibniz',
     ],
     test_suite='nose.collector',
