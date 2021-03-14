@@ -1,4 +1,4 @@
 from decouple import config
 
-root = config['WXBHOME']
+root = config('WXBHOME')
 
