@@ -8,6 +8,17 @@ from threading import local
 from wxbtool.plot.cmaps import cmaps, var2cmap
 
 
+data = local()
+
+
+def imgdata():
+    if 'img' in dir(data):
+        return data.img
+    else:
+        data.img = np.zeros([32, 64, 4], dtype=np.uint8)
+        return data.img
+
+
 def colorize(data, out, cmap):
     data = data.reshape(32, 64)
     data = (data - data.min()) / (data.max() - data.min())
