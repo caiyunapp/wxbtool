@@ -1310,3 +1310,21 @@ cmaps = {
     'copper': COPPER,
     'rainbow': RAINBOW,
 }
+
+
+var2cmap = {
+    'temperature': 'coolwarm',
+    'geopotential': 'coolwarm',
+    'z500': 'coolwarm',
+    'z1000': 'coolwarm',
+    'tau': 'coolwarm',
+    't850': 'coolwarm',
+    'tcc': 'coolwarm',
+    't2m': 'coolwarm',
+    'tisr': 'coolwarm',
+    'u500': 'coolwarm',
+    'u1000': 'coolwarm',
+    'v500': 'coolwarm',
+    'v1000': 'coolwarm',
+}
+

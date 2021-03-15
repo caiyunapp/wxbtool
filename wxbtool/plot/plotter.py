@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 
 from threading import local
-from wxbtool.plot.cmaps import cmaps
+from wxbtool.plot.cmaps import cmaps, var2cmap
 
 data = local()
 
@@ -20,7 +20,9 @@ def imgdata():
 
 def colorize(data, out, cmap):
     data = data.reshape(32, 64)
-    fliped = (data[::-1, :] * 255).astype(np.uint8)
+    data = (data - data.min()) / (data.max() - data.min())
+    data = (data * (data >= 0) * (data < 1) + (data >= 1)) * 255
+    fliped = (data[::-1, :]).astype(np.uint8)
     return np.take(cmaps[cmap], fliped, axis=0, out=out)
 
 
@@ -30,5 +32,5 @@ def imsave(fileobj, data):
     fileobj.write(buffer)
 
 
-def plot(fileobj, data, cmap='coolwarm'):
-    imsave(fileobj, colorize(data, imgdata(), cmap))
+def plot(var, fileobj, data):
+    imsave(fileobj, colorize(data, imgdata(), var2cmap[var]))
