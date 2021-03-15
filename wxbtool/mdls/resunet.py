@@ -9,9 +9,9 @@ import logging
 import torch as th
 import torch.nn as nn
 
-from leibniz.nn.net import resunet, hyptub
+from leibniz.nn.net import resunet
 from leibniz.nn.activation import CappingRelu
-from leibniz.unet.hyperbolic import HyperBottleneck
+from leibniz.unet.senet import SEBottleneck
 
 from wxbtool.norms.meanstd import *
 from wxbtool.nn.setting import Setting
@@ -21,10 +21,6 @@ logger = logging.getLogger()
 
 
 mse = nn.MSELoss()
-
-
-def linear(in_channels, out_channels, **kwargs):
-    return nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
 
 
 class ModelSetting(Setting):
@@ -63,15 +59,31 @@ class ModelSetting(Setting):
         self.years_test = [2017, 2018]
 
 
+class Enhencer(nn.Module):
+    def __init__(self, channels):
+        super(Enhencer, self).__init__()
+        hidden = channels * 2
+        self.fci = nn.Linear(channels, hidden)
+        self.fco = nn.Linear(hidden, channels)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        b, c, h, w = x.size()
+        out = self.fci(x.view(b, c * h * w))
+        out = self.relu(out)
+        out = self.fco(out).view(b, c, h, w)
+        return out
+
+
 class ResUNetModel(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
-        tube = hyptub(1664, 832, 1664, encoder=linear, decoder=linear)
+        enhencer = Enhencer(3328)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
                             vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
-                            block=HyperBottleneck, relu=CappingRelu(), enhencer=tube,
+                            block=SEBottleneck, relu=CappingRelu(), enhencer=enhencer,
                             final_normalized=False)
 
     def get_inputs(self, **kwargs):
