@@ -9,6 +9,7 @@ from pathlib import Path
 
 import arrow
 import numpy as np
+import sys
 import torch as th
 from torch.utils.data import DataLoader
 
@@ -44,7 +45,7 @@ try:
     mdm = importlib.import_module(opt.module, package=None)
 except ImportError as e:
     print('failure when loading model')
-    exit(1)
+    sys.exit(1)
 
 name = mdm.model.setting.name
 time_str = arrow.now().format('YYYYMMDD_HHmmss')
@@ -65,7 +66,7 @@ def test_model(mdl):
             mdm.model.load_state_dict(checkpoint)
     except ImportError as e:
         logger.exception(e)
-        exit(1)
+        sys.exit(1)
 
     if th.cuda.is_available():
         mdl = mdl.cuda()
