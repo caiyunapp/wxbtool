@@ -1,50 +1,37 @@
 # -*- coding: utf-8 -*-
 
 '''
- Demo model in wxbtool package
-'''
+ A modeling spec for t850
 
-import logging
+ The spec follows basic settings and discussions in UNet with cube-sphere mapping (2 deg) by Weyn et al. 2020
+
+'''
 
 import torch as th
 import torch.nn as nn
-
-from leibniz.nn.net import resunet
-from leibniz.nn.activation import CappingRelu
-from leibniz.unet.senet import SEBottleneck
-
-from wxbtool.norms.meanstd import *
-from wxbtool.nn.setting import Setting
 from wxbtool.nn.model import Base2d
-
-logger = logging.getLogger()
+from wxbtool.nn.setting import Setting
+from wxbtool.norms.meanstd import *
 
 
 mse = nn.MSELoss()
 
 
-class ModelSetting(Setting):
+class CommonSetting(Setting):
     def __init__(self):
         super().__init__()
         self.resolution = '5.625deg'    # The spatial resolution of the model
-
-        self.name = 'resunet'           # The name of the model
-
-        self.step = 4                   # How many hours of a hourly step which all features in organized temporally
-        self.input_span = 3             # How many hourly steps for an input
-        self.pred_span = 1              # How many hourly steps for a prediction
-        self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
         self.levels = ['300', '500', '700', '850', '1000'] # Which vertical levels to choose
         self.height = len(self.levels)                     # How many vertical levels to choose
 
         # The name of variables to choose, for both input features and output
-        self.vars = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature', 'total_cloud_cover']
+        self.vars = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature']
 
         # The code of variables in input features
-        self.vars_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
+        self.vars_in = ['z500', 'z1000', 'tau', 't850', 't2m', 'tisr']
         # The code of variables in output
-        self.vars_out = ['t850']
+        self.vars_out = ['z500']
 
         # temporal scopes for train
         self.years_train = [
@@ -59,39 +46,33 @@ class ModelSetting(Setting):
         self.years_test = [2017, 2018]
 
 
-class Enhencer(nn.Module):
-    def __init__(self, channels):
-        super(Enhencer, self).__init__()
-        hidden = channels * 2
-        self.fci = nn.Linear(channels, hidden)
-        self.fco = nn.Linear(hidden, channels)
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        b, c, h, w = x.size()
-        out = self.fci(x.view(b, c * h * w))
-        out = self.relu(out)
-        out = self.fco(out).view(b, c, h, w)
-        return out
+class Setting3d(CommonSetting):
+    def __init__(self):
+        super().__init__()
+        self.step = 8                   # How many hours of a hourly step which all features in organized temporally
+        self.input_span = 3             # How many hourly steps for an input
+        self.pred_span = 1              # How many hourly steps for a prediction
+        self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
 
-class ResUNetModel(Base2d):
+class Setting5d(CommonSetting):
+    def __init__(self):
+        super().__init__()
+        self.step = 8                   # How many hours of a hourly step which all features in organized temporally
+        self.input_span = 3             # How many hourly steps for an input
+        self.pred_span = 1              # How many hourly steps for a prediction
+        self.pred_shift = 120           # How many hours between the end of the input span and the beginning of prediction span
+
+
+class Spec(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
-        enhencer = Enhencer(3328)
-        self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
-                            spatial=(32, 64+2), layers=5, ratio=-1,
-                            vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
-                            scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
-                            block=SEBottleneck, relu=CappingRelu(), enhencer=enhencer,
-                            final_normalized=False)
 
     def get_inputs(self, **kwargs):
         z500 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
         z1000 = norm_z1000(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])
         tau = norm_tau(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('300')] - kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('700')])
         t850 = norm_t850(kwargs['temperature'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')])
-        tcc = norm_tcc(kwargs['total_cloud_cover'].view(-1, self.setting.input_span, 32, 64))
         t2m = norm_t2m(kwargs['2m_temperature'].view(-1, self.setting.input_span, 32, 64))
         tisr = norm_tisr(kwargs['toa_incident_solar_radiation'].view(-1, self.setting.input_span, 32, 64))
 
@@ -99,7 +80,6 @@ class ResUNetModel(Base2d):
         z1000 = self.augment_data(z1000)
         tau = self.augment_data(tau)
         t850 = self.augment_data(t850)
-        tcc = self.augment_data(tcc)
         t2m = self.augment_data(t2m)
         tisr = self.augment_data(tisr)
 
@@ -108,39 +88,25 @@ class ResUNetModel(Base2d):
             'z1000': z1000,
             'tau': tau,
             't850': t850,
-            'tcc': tcc,
             't2m': t2m,
             'tisr': tisr,
         }, th.cat((
             z500, z1000,
-            tau, t850, tcc,
+            tau, t850,
             t2m, tisr,
         ), dim=1)
 
     def get_targets(self, **kwargs):
-        t850 = kwargs['temperature'].view(-1, 1, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')]
-        t850 = self.augment_data(t850)
-        return {'t850': t850}, t850
+        z500 = kwargs['geopotential'].view(-1, 1, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')]
+        z500 = self.augment_data(z500)
+        return {'z500': z500}, z500
 
     def get_results(self, **kwargs):
-        t850 = denorm_t850(kwargs['t850'])
-        return {'t850': t850}, t850
+        z500 = denorm_z500(kwargs['z500'])
+        return {'z500': z500}, z500
 
     def forward(self, **kwargs):
-        batch_size = kwargs['temperature'].size()[0]
-        self.update_da_status(batch_size)
-
-        _, input = self.get_inputs(**kwargs)
-        constant = self.get_augmented_constant(input)
-        input = th.cat((input, constant), dim=1)
-        input = th.cat((input[:, :, :, 63:64], input, input[:, :, :, 0:1]), dim=3)
-
-        output = self.resunet(input)
-
-        output = output[:, :, :, 1:65]
-        return {
-            't850': output
-        }
+        raise NotImplementedError('Spec is abstract and can not be initialized')
 
     def lossfun(self, inputs, result, target):
         _, rst = self.get_results(**result)
@@ -151,7 +117,3 @@ class ResUNetModel(Base2d):
         losst = mse(rst[:, 0], tgt[:, 0])
 
         return losst
-
-
-setting = ModelSetting()
-model = ResUNetModel(setting)
