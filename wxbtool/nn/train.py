@@ -70,7 +70,7 @@ scheduler = None
 
 def train_model(mdl):
     global scheduler
-    optimizer = th.optim.Adam(mdl.parameters(), lr=1e-3)
+    optimizer = th.optim.Adam(mdl.parameters(), lr=3e-4)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     try:
