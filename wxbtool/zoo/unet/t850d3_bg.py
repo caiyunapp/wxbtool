@@ -20,6 +20,8 @@ from wxbtool.specs.t850 import Spec, Setting3d
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
+        self.name = 't850bg'
+
         enhencer = hyptub(1408, 704, 1408, encoder=linear, decoder=linear)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,

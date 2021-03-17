@@ -4,7 +4,7 @@
     Demo model in wxbtool package
 
     This model predict t850 3-days in the future
-    it cost more memory and can be fitted into one P40 gpu at batch size 64
+    it cost more memory and can be fitted into one P40 gpu at batch size 8
     the weighted rmse is 2.02 K
 '''
 
@@ -20,6 +20,8 @@ from wxbtool.specs.t850 import Spec, Setting3d
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
+        self.name = 't850hg'
+
         enhencer = hyptub(1408, 704, 1408, encoder=linear, decoder=linear)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,

@@ -47,7 +47,7 @@ except ImportError as e:
     print('failure when loading model')
     sys.exit(1)
 
-name = mdm.model.setting.name
+name = mdm.model.name
 time_str = arrow.now().format('YYYYMMDD_HHmmss')
 model_path = Path(f'./trains/{name}-{time_str}')
 model_path.mkdir(exist_ok=True, parents=True)

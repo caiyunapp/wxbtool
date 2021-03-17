@@ -37,6 +37,8 @@ class Enhencer(nn.Module):
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
+        self.name = 't850'
+
         enhencer = Enhencer(3328)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
