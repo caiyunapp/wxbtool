@@ -66,8 +66,6 @@ logger.addHandler(handler)
 
 gunicorn_logger = logging.getLogger('gunicorn.info')
 app.logger.handlers.extend(gunicorn_logger.handlers)
-
-app.logger.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
 logger.handlers.extend(app.logger.handlers)
 
 route = app.route
