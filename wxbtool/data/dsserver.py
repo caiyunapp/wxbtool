@@ -73,7 +73,7 @@ route = app.route
 datasets = {}
 
 
-@route("/<str:mode>/<int:idx>")
+@route("/<string:mode>/<int:idx>")
 def seek(mode, idx):
     inputs, targets = datasets[mode][idx]
     msg = msgpack.dumps({
