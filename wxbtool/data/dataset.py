@@ -3,6 +3,9 @@
 import xarray as xr
 import numpy as np
 import logging
+import os
+import os.path as path
+import hashlib
 
 from itertools import product
 from torch.utils.data import Dataset
@@ -22,6 +25,7 @@ class WxDataset(Dataset):
         self.step = step
         self.pred_shift = pred_shift
         self.pred_span = pred_span
+        self.years = years
         self.vars = vars
         self.levels = levels
         self.inputs = {}
@@ -32,13 +36,24 @@ class WxDataset(Dataset):
             self.width = 32
             self.length = 64
 
+        hashstr = '%s:%s:%s:%s:%s:%s:%s:%s' % (resolution, years, vars, levels, step, input_span, pred_shift, pred_span)
+        hashstr = hashlib.md5(hashstr.encode('utf-8')).hexdigest()
+        dumpdir = '%s/.cache/%s' % (self.root, hashstr)
+        if not path.exists(dumpdir):
+            self.load()
+            os.mkdir(dumpdir)
+            self.dump(dumpdir)
+
+        self.memmap(dumpdir)
+
+    def load(self):
         levels_selector = []
-        for l in levels:
+        for l in self.levels:
             levels_selector.append(all_levels.index(l))
         selector = np.array(levels_selector, dtype=np.int)
 
-        size, dti, dto = self.init_holders(vars)
-        for var, yr in product(vars, years):
+        size, dti, dto = self.init_holders(self.vars)
+        for var, yr in product(self.vars, self.years):
             if var in vars3d:
                 length, chi, cho = self.load_3ddata(yr, var, selector)
             elif var in vars2d:
@@ -49,8 +64,8 @@ class WxDataset(Dataset):
             dti[var].append(chi)
             dto[var].append(cho)
 
-        self.size = size // len(vars)
-        for v in vars:
+        self.size = size // len(self.vars)
+        for v in self.vars:
             input = np.concatenate(tuple(dti[v]), axis=0)
             target = np.concatenate(tuple(dto[v]), axis=0)
             dti[v] = None
@@ -112,6 +127,22 @@ class WxDataset(Dataset):
         ds.close()
 
         return length, dti, dto
+
+    def dump(self, dumpdir):
+        for var in self.vars:
+            input_dump = '%s/input_%s.npy' % (dumpdir, var)
+            target_dump = '%s/target_%s.npy' % (dumpdir, var)
+            np.save(input_dump, self.inputs[var])
+            del self.inputs[var]
+            np.save(target_dump, self.targets[var])
+            del self.targets[var]
+
+    def memmap(self, dumpdir):
+        for var in self.vars:
+            input_dump = '%s/input_%s.npy' % (dumpdir, var)
+            target_dump = '%s/target_%s.npy' % (dumpdir, var)
+            self.inputs[var] = np.memmap(input_dump, dtype=np.float32, mode='r')
+            self.targets[var] = np.memmap(target_dump, dtype=np.float32, mode='r')
 
     def __len__(self):
         return self.size
