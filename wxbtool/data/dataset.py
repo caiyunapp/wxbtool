@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import xarray as xr
-import numpy as np
-import logging
 import os
 import os.path as path
 import hashlib
 import requests
+import logging
+import json
+
+import xarray as xr
+import numpy as np
 
 import msgpack
 import msgpack_numpy as m
@@ -137,6 +139,13 @@ class WxDataset(Dataset):
         return length, dti, dto
 
     def dump(self, dumpdir):
+        shapes = {
+            'input': self.inputs[self.vars[0]].shape,
+            'target': self.targets[self.vars[0]].shape,
+        }
+        with open('%s/shapes.json' % dumpdir, mode='w') as fp:
+            json.dump(shapes, fp)
+
         for var in self.vars:
             input_dump = '%s/input_%s.npy' % (dumpdir, var)
             target_dump = '%s/target_%s.npy' % (dumpdir, var)
@@ -146,11 +155,14 @@ class WxDataset(Dataset):
             del self.targets[var]
 
     def memmap(self, dumpdir):
+        with open('%s/shapes.json' % dumpdir) as fp:
+            shapes = json.load(fp)
+
         for var in self.vars:
             input_dump = '%s/input_%s.npy' % (dumpdir, var)
             target_dump = '%s/target_%s.npy' % (dumpdir, var)
-            self.inputs[var] = np.memmap(input_dump, dtype=np.float32, mode='r')
-            self.targets[var] = np.memmap(target_dump, dtype=np.float32, mode='r')
+            self.inputs[var] = np.memmap(input_dump, dtype=np.float32, mode='r').reshape(shapes['input'])
+            self.targets[var] = np.memmap(target_dump, dtype=np.float32, mode='r').reshape(shapes['target'])
 
     def __len__(self):
         return self.inputs[self.vars[0]].shape[0]
