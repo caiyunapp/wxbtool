@@ -23,7 +23,7 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-h", "--host", type=str, default='127.0.0.1', help="the host of the dataset serevr")
+parser.add_argument("-i", "--ip", type=str, default='127.0.0.1', help="the ip of the dataset serevr")
 parser.add_argument("-p", "--port", type=int, default=8088, help="the port of the dataset serevr")
 parser.add_argument("-w", "--workers", type=int, default=4, help="the number of workers")
 parser.add_argument("-m", "--module", type=str, default='wxbtool.specs.t850', help="module of a metrological model to load")
