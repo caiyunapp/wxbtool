@@ -90,6 +90,7 @@ def length(hash, mode):
     if ds.hashcode != hash:
         return flask.current_app.response_class('not found', status=404, mimetype="application/msgpack")
 
+    logger.info('query length[%s] %d', mode, len(ds))
     msg = msgpack.dumps({
         'size': len(ds),
     })
@@ -103,6 +104,7 @@ def seek(hash, mode, idx):
     if ds.hashcode != hash:
         return flask.current_app.response_class('not found', status=404, mimetype="application/msgpack")
 
+    logger.info('query data[%s] at %d', mode, idx)
     inputs, targets = ds[idx]
     msg = msgpack.dumps({
         'inputs': inputs,
