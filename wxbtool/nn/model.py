@@ -7,7 +7,7 @@ import torch as th
 import torch.nn as nn
 
 from wxbtool.data.constants import load_area_weight, load_lsm, load_slt, load_orography, load_lat2d, load_lon2d
-from wxbtool.evaluation import Evaluator
+from wxbtool.util.evaluation import Evaluator
 from wxbtool.data.dataset import WxDataset
 
 

@@ -13,7 +13,7 @@ import sys
 import torch as th
 from torch.utils.data import DataLoader
 
-from wxbtool.plot.plotter import plot
+from wxbtool.util.plotter import plot
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))

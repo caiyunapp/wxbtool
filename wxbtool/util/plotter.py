@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 
 from threading import local
-from wxbtool.plot.cmaps import cmaps, var2cmap
+from wxbtool.util.cmaps import cmaps, var2cmap
 
 
 data = local()

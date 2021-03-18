@@ -6,6 +6,12 @@ import logging
 import os
 import os.path as path
 import hashlib
+import requests
+
+import msgpack
+import msgpack_numpy as m
+m.patch()
+
 
 from itertools import product
 from torch.utils.data import Dataset
@@ -36,8 +42,8 @@ class WxDataset(Dataset):
             self.width = 32
             self.length = 64
 
-        hashstr = '%s:%s:%s:%s:%s:%s:%s:%s' % (resolution, years, vars, levels, step, input_span, pred_shift, pred_span)
-        hashstr = hashlib.md5(hashstr.encode('utf-8')).hexdigest()
+        code = '%s:%s:%s:%s:%s:%s:%s:%s' % (resolution, years, vars, levels, step, input_span, pred_shift, pred_span)
+        hashstr = hashlib.md5(code.encode('utf-8')).hexdigest()
         dumpdir = '%s/.cache/%s' % (self.root, hashstr)
         if not path.exists(dumpdir):
             self.load()
@@ -153,3 +159,34 @@ class WxDataset(Dataset):
             inputs.update({var: self.inputs[var][item:item+1]})
             targets.update({var: self.targets[var][item:item+1]})
         return inputs, targets
+
+
+class WxDatasetClient(Dataset):
+    def __init__(self, url, mode, resolution, years, vars, levels, step=1, input_span=2, pred_shift=24, pred_span=1):
+        self.url = url
+        self.mode = mode
+
+        code = '%s:%s:%s:%s:%s:%s:%s:%s' % (resolution, years, vars, levels, step, input_span, pred_shift, pred_span)
+        self.hashstr = hashlib.md5(code.encode('utf-8')).hexdigest()
+
+    def __len__(self):
+        url = '%s/%s/%s'% (self.url, self.hashstr, self.mode)
+        r = requests.get(url)
+        if r.status_code != 200:
+            raise Exception('http error %s: %s' % (r.status_code, r.text))
+
+        text = r.text
+        data = msgpack.loads(text)
+
+        return data['size']
+
+    def __getitem__(self, item):
+        url = '%s/%s/%s/%d'% (self.url, self.hashstr, self.mode, item)
+        r = requests.get(url)
+        if r.status_code != 200:
+            raise Exception('http error %s: %s' % (r.status_code, r.text))
+
+        text = r.text
+        data = msgpack.loads(text)
+
+        return data['inputs'], data['targets']

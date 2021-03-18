@@ -7,12 +7,13 @@ import resource
 import arrow
 import sys
 import os
-
-import numpy as np
 import flask
+
 import msgpack
 import msgpack_numpy as m
 m.patch()
+
+import numpy as np
 
 from pathlib import Path
 from flask import Flask
@@ -22,7 +23,9 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-h", "--host", type=str, default='127.0.0.1', help="the host of the dataset serevr")
 parser.add_argument("-p", "--port", type=int, default=8088, help="the port of the dataset serevr")
+parser.add_argument("-w", "--workers", type=int, default=4, help="the number of workers")
 parser.add_argument("-m", "--module", type=str, default='wxbtool.specs.t850', help="module of a metrological model to load")
 parser.add_argument("-s", "--setting", type=str, default='Setting', help="setting for a metrological model spec")
 opt = parser.parse_args()
@@ -71,6 +74,23 @@ app = setup(__name__)
 route = app.route
 
 datasets = {}
+spec.load_dataset('train')
+spec.load_dataset('test')
+dtrain = spec.dataset_train
+deval = spec.dataset_eval
+dtest = spec.dataset_test
+datasets['train'] = dtrain
+datasets['eval'] = deval
+datasets['test'] = dtest
+
+
+@route("/<string:mode>")
+def length(mode):
+    ds = datasets[mode]
+    msg = msgpack.dumps({
+        'size': ds.size,
+    })
+    return flask.current_app.response_class(msg, status=200, mimetype="application/msgpack")
 
 
 @route("/<string:mode>/<int:idx>")
@@ -84,19 +104,32 @@ def seek(mode, idx):
 
 
 def main():
-    spec.load_dataset('train')
-    spec.load_dataset('test')
-    dtrain = spec.dataset_train
-    deval = spec.dataset_eval
-    dtest = spec.dataset_test
-    datasets['train'] = dtrain
-    datasets['eval'] = deval
-    datasets['test'] = dtest
+    import gunicorn.app.base
+
+    class StandaloneApplication(gunicorn.app.base.BaseApplication):
+        def __init__(self, app, options=None):
+            self.options = options or {}
+            self.application = app
+            super().__init__()
+
+        def load_config(self):
+            config = {key: value for key, value in self.options.items()
+                      if key in self.cfg.settings and value is not None}
+            for key, value in config.items():
+                self.cfg.set(key.lower(), value)
+
+        def load(self):
+            return self.application
 
     print("PID %s" % str(os.getpid()))
+    print("PID %s" % str(os.getpid()))
     print("serving... %s" % opt.module)
-    app.debug = False
-    app.run(host="0.0.0.0", port=opt.port, debug=False)
+
+    options = {
+        'bind': '%s:%s' % (opt.host, opt.port),
+        'workers': opt.workers,
+    }
+    StandaloneApplication(app, options).run()
 
 
 if __name__ == "__main__":

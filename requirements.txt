@@ -5,6 +5,8 @@ arrow
 flask
 msgpack
 msgpack-numpy
+requests
+gunicorn
 
 numpy
 torch
