@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from wxbtool.data.constants import load_area_weight, load_lsm, load_slt, load_orography, load_lat2d, load_lon2d
 from wxbtool.util.evaluation import Evaluator
-from wxbtool.data.dataset import WxDataset
+from wxbtool.data.dataset import WxDataset, WxDatasetClient
 
 
 def cast(element):
@@ -76,22 +76,44 @@ class Model2d(nn.Module):
         self.test_size = -1
         self.eval_size = -1
 
-    def load_dataset(self, mode):
-        if mode == 'train':
-            self.dataset_train, self.dataset_eval = (
-                    WxDataset(self.setting.root, self.setting.resolution,
+    def load_dataset(self, phase, mode, **kwargs):
+        if phase == 'train':
+            if mode == 'server':
+                self.dataset_train, self.dataset_eval = (
+                        WxDataset(self.setting.root, self.setting.resolution,
+                                  self.setting.years_train, self.setting.vars, self.setting.levels,
+                                  input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step),
+                        WxDataset(self.setting.root, self.setting.resolution,
+                                  self.setting.years_eval, self.setting.vars, self.setting.levels,
+                                  input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step)
+                )
+            else:
+                ds_url = kwargs['url']
+                self.dataset_train, self.dataset_eval = (
+                    WxDatasetClient(ds_url, 'train', self.setting.resolution,
                               self.setting.years_train, self.setting.vars, self.setting.levels,
-                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step),
-                    WxDataset(self.setting.root, self.setting.resolution,
+                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift,
+                              pred_span=self.setting.pred_span, step=self.setting.step),
+                    WxDatasetClient(ds_url, 'eval', self.setting.resolution,
                               self.setting.years_eval, self.setting.vars, self.setting.levels,
-                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step)
-            )
+                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift,
+                              pred_span=self.setting.pred_span, step=self.setting.step)
+                )
+
             self.train_size = self.dataset_train.size
             self.eval_size = self.dataset_eval.size
         else:
-            self.dataset_test = WxDataset(self.setting.root, self.setting.resolution,
-                                          self.setting.years_test, self.setting.vars, self.setting.levels,
-                                          input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step)
+            if mode == 'server':
+                self.dataset_test = WxDataset(self.setting.root, self.setting.resolution,
+                                              self.setting.years_test, self.setting.vars, self.setting.levels,
+                                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift, pred_span=self.setting.pred_span, step=self.setting.step)
+            else:
+                ds_url = kwargs['url']
+                self.dataset_test = WxDatasetClient(ds_url, 'test', self.setting.resolution,
+                                              self.setting.years_test, self.setting.vars, self.setting.levels,
+                                              input_span=self.setting.input_span, pred_shift=self.setting.pred_shift,
+                                              pred_span=self.setting.pred_span, step=self.setting.step)
+
             self.test_size = self.dataset_test.size
 
     def get_constant(self, input, device):

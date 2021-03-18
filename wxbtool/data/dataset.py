@@ -162,15 +162,15 @@ class WxDataset(Dataset):
 
 
 class WxDatasetClient(Dataset):
-    def __init__(self, url, mode, resolution, years, vars, levels, step=1, input_span=2, pred_shift=24, pred_span=1):
+    def __init__(self, url, phase, resolution, years, vars, levels, step=1, input_span=2, pred_shift=24, pred_span=1):
         self.url = url
-        self.mode = mode
+        self.phase = phase
 
         code = '%s:%s:%s:%s:%s:%s:%s:%s' % (resolution, years, vars, levels, step, input_span, pred_shift, pred_span)
         self.hashstr = hashlib.md5(code.encode('utf-8')).hexdigest()
 
     def __len__(self):
-        url = '%s/%s/%s'% (self.url, self.hashstr, self.mode)
+        url = '%s/%s/%s'% (self.url, self.hashstr, self.phase)
         r = requests.get(url)
         if r.status_code != 200:
             raise Exception('http error %s: %s' % (r.status_code, r.text))
@@ -181,7 +181,7 @@ class WxDatasetClient(Dataset):
         return data['size']
 
     def __getitem__(self, item):
-        url = '%s/%s/%s/%d'% (self.url, self.hashstr, self.mode, item)
+        url = '%s/%s/%s/%d'% (self.url, self.hashstr, self.phase, item)
         r = requests.get(url)
         if r.status_code != 200:
             raise Exception('http error %s: %s' % (r.status_code, r.text))

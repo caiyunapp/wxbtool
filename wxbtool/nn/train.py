@@ -219,9 +219,14 @@ def train_model(mdl):
 
 if __name__ == '__main__':
     if mdm != None:
-        mdm.model.load_dataset('train')
+        if opt.data != '':
+            mdm.model.load_dataset('train', 'client', url=opt.data)
+        else:
+            mdm.model.load_dataset('train', 'server')
+
         if len(opt.gpu.split(',')) > 0:
             train_model(nn.DataParallel(mdm.model, output_device=0))
         else:
             train_model(mdm.model)
+
     print('Training Finished!')

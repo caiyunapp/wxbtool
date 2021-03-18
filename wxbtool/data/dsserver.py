@@ -74,8 +74,8 @@ app = setup(__name__)
 route = app.route
 
 datasets = {}
-spec.load_dataset('train')
-spec.load_dataset('test')
+spec.load_dataset('train', 'server')
+spec.load_dataset('test', 'server')
 dtrain = spec.dataset_train
 deval = spec.dataset_eval
 dtest = spec.dataset_test
