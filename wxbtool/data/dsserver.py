@@ -41,9 +41,8 @@ except ImportError as e:
     print('failure when loading model')
     sys.exit(1)
 
-name = mdm.model.name
 time_str = arrow.now().format('YYYYMMDD_HHmmss')
-model_path = Path(f'./dsserver/{name}-{time_str}')
+model_path = Path(f'./dsserver/{time_str}')
 model_path.mkdir(exist_ok=True, parents=True)
 log_file = model_path / Path('dsserver.log')
 
