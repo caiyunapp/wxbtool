@@ -30,10 +30,11 @@ parser.add_argument("-c", "--n_cpu", type=int, default=64, help="number of cpu t
 parser.add_argument("-b", "--batch_size", type=int, default=64, help="size of the batches")
 parser.add_argument("-e", "--epoch", type=int, default=0, help="current epoch to start training from")
 parser.add_argument("-n", "--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("-m", "--module", type=str, default='wxbtool.mdls.resunet', help="module of the metrological model to load")
+parser.add_argument("-m", "--module", type=str, default='wxbtool.zoo.unet.t850d3', help="module of the metrological model to load")
 parser.add_argument("-l", "--load", type=str, default='', help="dump file of the metrological model to load")
 parser.add_argument("-k", "--check", type=str, default='', help="checkpoint file to load")
 parser.add_argument("-r", "--rate", type=float, default=0.001, help="learning rate")
+parser.add_argument("-d", "--data", type=str, default='', help="url of the dataset server")
 opt = parser.parse_args()
 
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu

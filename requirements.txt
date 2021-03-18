@@ -2,6 +2,9 @@ nose
 
 python-decouple
 arrow
+flask
+msgpack
+msgpack-numpy
 
 numpy
 torch
@@ -11,8 +14,7 @@ toolz
 dask
 xarray
 
-leibniz
-
 opencv-python
 
-webdataset
+leibniz
+

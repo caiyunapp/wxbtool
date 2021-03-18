@@ -68,6 +68,10 @@ class Spec(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
 
+        # following Weyn's schema from the paper
+        #   UNet with cube-sphere mapping (2 deg) by Weyn et al. 2020
+        self.name = 'z500_weyn'
+
     def get_inputs(self, **kwargs):
         z500 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
         z1000 = norm_z1000(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])

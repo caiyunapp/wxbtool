@@ -22,10 +22,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-g", "--gpu", type=str, default='0', help="index of gpu")
 parser.add_argument("-c", "--n_cpu", type=int, default=64, help="number of cpu threads to use during batch generation")
 parser.add_argument("-b", "--batch_size", type=int, default=64, help="size of the batches")
-parser.add_argument("-e", "--epoch", type=int, default=0, help="current epoch to start training from")
 parser.add_argument("-n", "--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("-m", "--model", type=str, default='', help="metrological model to load")
-parser.add_argument("-k", "--check", type=str, default='', help="checkpoint file to load")
+parser.add_argument("-m", "--module", type=str, default='wxbtool.zoo.unet.t850d3', help="module of the metrological model to load")
+parser.add_argument("-l", "--load", type=str, default='', help="dump file of the metrological model to load")
 opt = parser.parse_args()
 
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
@@ -61,9 +60,9 @@ logger.info(str(opt))
 
 def test_model(mdl):
     try:
-        if opt.check != '':
-            checkpoint = th.load(opt.check, map_location='cpu')
-            mdm.model.load_state_dict(checkpoint)
+        if opt.load != '':
+            dump = th.load(opt.load, map_location='cpu')
+            mdm.model.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
         sys.exit(1)
