@@ -57,23 +57,19 @@ logger.setLevel(logging.INFO)
 logger.info(str(opt))
 
 
-def setup(appname):
-    application = Flask(appname)
-    application.debug = False
+app = Flask(__name__)
+app.debug = False
 
-    gunicorn_logger = logging.getLogger('gunicorn.info')
-    app.logger.handlers.extend(gunicorn_logger.handlers)
-    app.logger.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+logger.addHandler(handler)
 
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
-    logger.addHandler(handler)
-    logger.handlers.extend(app.logger.handlers)
+gunicorn_logger = logging.getLogger('gunicorn.info')
+app.logger.handlers.extend(gunicorn_logger.handlers)
 
-    return application
+app.logger.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+logger.handlers.extend(app.logger.handlers)
 
-
-app = setup(__name__)
 route = app.route
 
 datasets = {}
