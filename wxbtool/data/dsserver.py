@@ -131,11 +131,13 @@ def main():
             return self.application
 
     print("PID %s" % str(os.getpid()))
-    print("PID %s" % str(os.getpid()))
     print("serving... %s" % opt.module)
+    print("ip: %s" % opt.ip)
+    print("port: %s" % opt.port)
+    print("workers: %s" % opt.workers)
 
     options = {
-        'bind': '%s:%s' % (opt.host, opt.port),
+        'bind': '%s:%s' % (opt.ip, opt.port),
         'workers': opt.workers,
     }
     StandaloneApplication(app, options).run()
