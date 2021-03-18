@@ -140,27 +140,44 @@ class WxDataset(Dataset):
 
     def dump(self, dumpdir):
         shapes = {
-            'input': self.inputs[self.vars[0]].shape,
-            'target': self.targets[self.vars[0]].shape,
+            'inputs': {},
+            'targets': {},
         }
-        with open('%s/shapes.json' % dumpdir, mode='w') as fp:
-            json.dump(shapes, fp)
 
         for var in self.vars:
             input_dump = '%s/input_%s.npy' % (dumpdir, var)
             target_dump = '%s/target_%s.npy' % (dumpdir, var)
+
+            shapes['inputs'][var] = self.inputs[var].shape
             np.save(input_dump, self.inputs[var])
             del self.inputs[var]
+
+            shapes['targets'][var] = self.targets[var].shape
             np.save(target_dump, self.targets[var])
             del self.targets[var]
 
+        with open('%s/shapes.json' % dumpdir, mode='w') as fp:
+            json.dump(shapes, fp)
+
     def memmap(self, dumpdir):
+        with open('%s/shapes.json' % dumpdir) as fp:
+            shapes = json.load(fp)
+
         for var in self.vars:
             input_dump = '%s/input_%s.npy' % (dumpdir, var)
             target_dump = '%s/target_%s.npy' % (dumpdir, var)
 
-            self.inputs[var] = np.memmap(input_dump, mode='r')
-            self.targets[var] = np.memmap(target_dump, mode='r')
+            shape = shapes['inputs'][var]
+            total_size = np.prod(shape)
+            input = np.memmap(input_dump, dtype=np.float32, mode='r')
+            shift = input.shape[0] - total_size
+            self.inputs[var] = np.reshape(input[shift:], shape)
+
+            shape = shapes['targets'][var]
+            total_size = np.prod(shape)
+            target = np.memmap(target_dump, dtype=np.float32, mode='r')
+            shift = target.shape[0] - total_size
+            self.targets[var] = np.reshape(target[shift:], shape)
 
     def __len__(self):
         return self.inputs[self.vars[0]].shape[0]
