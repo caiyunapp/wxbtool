@@ -29,7 +29,6 @@ opt = parser.parse_args()
 np.core.arrayprint._line_width = 150
 np.set_printoptions(linewidth=np.inf)
 
-name = opt.model
 early_stopping = 5
 best = np.inf
 count = 0
@@ -91,7 +90,7 @@ def main():
     datasets['test'] = dtest
 
     print("PID %s" % str(os.getpid()))
-    print("serving... %s" % name)
+    print("serving... %s" % opt.spec)
     app.debug = False
     app.run(host="0.0.0.0", port=opt.port, debug=False)
 
