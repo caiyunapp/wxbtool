@@ -215,5 +215,8 @@ class WxDatasetClient(Dataset):
             raise Exception('http error %s: %s' % (r.status_code, r.text))
 
         data = msgpack.loads(r.content)
+        for key, val in data.items():
+            for var, blk in val.items():
+                val[var] = np.copy(blk)
 
         return data['inputs'], data['targets']

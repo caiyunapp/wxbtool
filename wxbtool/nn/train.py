@@ -94,10 +94,10 @@ def train_model(mdl):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdm.setting.vars
             }
             targets = {
-                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdm.setting.vars
             }
 
             if th.cuda.is_available():
@@ -146,10 +146,10 @@ def train_model(mdl):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(np.copy(inputs[v]), dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdm.setting.vars
             }
             targets = {
-                v: th.as_tensor(np.copy(targets[v]), dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdm.setting.vars
             }
 
             if th.cuda.is_available():
