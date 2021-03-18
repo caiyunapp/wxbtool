@@ -161,8 +161,8 @@ class WxDataset(Dataset):
         for var in self.vars:
             input_dump = '%s/input_%s.npy' % (dumpdir, var)
             target_dump = '%s/target_%s.npy' % (dumpdir, var)
-            self.inputs[var] = np.memmap(input_dump, dtype=np.float32, shape=shapes['input'], mode='r')
-            self.targets[var] = np.memmap(target_dump, dtype=np.float32, shape=shapes['target'], mode='r')
+            self.inputs[var] = np.memmap(input_dump, dtype=np.float32, shape=tuple(shapes['input']), mode='r')
+            self.targets[var] = np.memmap(target_dump, dtype=np.float32, shape=tuple(shapes['target']), mode='r')
 
     def __len__(self):
         return self.inputs[self.vars[0]].shape[0]
