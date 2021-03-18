@@ -177,8 +177,7 @@ class WxDatasetClient(Dataset):
         if r.status_code != 200:
             raise Exception('http error %s: %s' % (r.status_code, r.text))
 
-        text = r.text
-        data = msgpack.loads(text)
+        data = msgpack.loads(r.content)
 
         return data['size']
 
@@ -188,7 +187,6 @@ class WxDatasetClient(Dataset):
         if r.status_code != 200:
             raise Exception('http error %s: %s' % (r.status_code, r.text))
 
-        text = r.text
-        data = msgpack.loads(text)
+        data = msgpack.loads(r.content)
 
         return data['inputs'], data['targets']
