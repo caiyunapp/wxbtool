@@ -35,7 +35,7 @@ count = 0
 
 mdm = None
 try:
-    mdm = importlib.import_module(opt.module, package=None)
+    mdm = importlib.import_module(opt.spec, package=None)
 except ImportError as e:
     print('failure when loading model')
     sys.exit(1)
