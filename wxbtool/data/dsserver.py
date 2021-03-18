@@ -94,7 +94,7 @@ def main():
     datasets['test'] = dtest
 
     print("PID %s" % str(os.getpid()))
-    print("serving... %s" % opt.spec)
+    print("serving... %s" % opt.module)
     app.debug = False
     app.run(host="0.0.0.0", port=opt.port, debug=False)
 
