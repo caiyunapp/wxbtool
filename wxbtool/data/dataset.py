@@ -153,7 +153,7 @@ class WxDataset(Dataset):
             self.targets[var] = np.memmap(target_dump, dtype=np.float32, mode='r')
 
     def __len__(self):
-        return self.size
+        return self.inputs[self.vars[0]].shape[0]
 
     def __getitem__(self, item):
         inputs, targets = {}, {}

@@ -91,7 +91,7 @@ def length(hash, mode):
         return flask.current_app.response_class('not found', status=404, mimetype="application/msgpack")
 
     msg = msgpack.dumps({
-        'size': ds.size,
+        'size': len(ds),
     })
 
     return flask.current_app.response_class(msg, status=200, mimetype="application/msgpack")

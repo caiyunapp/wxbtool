@@ -100,8 +100,8 @@ class Model2d(nn.Module):
                               pred_span=self.setting.pred_span, step=self.setting.step)
                 )
 
-            self.train_size = self.dataset_train.size
-            self.eval_size = self.dataset_eval.size
+            self.train_size = len(self.dataset_train)
+            self.eval_size = len(self.dataset_eval)
         else:
             if mode == 'server':
                 self.dataset_test = WxDataset(self.setting.root, self.setting.resolution,
@@ -114,7 +114,7 @@ class Model2d(nn.Module):
                                               input_span=self.setting.input_span, pred_shift=self.setting.pred_shift,
                                               pred_span=self.setting.pred_span, step=self.setting.step)
 
-            self.test_size = self.dataset_test.size
+            self.test_size = len(self.dataset_test)
 
     def get_constant(self, input, device):
         if device not in self.constant_cache:
