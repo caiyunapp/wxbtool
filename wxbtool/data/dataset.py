@@ -46,10 +46,10 @@ class WxDataset(Dataset):
         hashstr = hashlib.md5(code.encode('utf-8')).hexdigest()
         self.hashcode = hashstr
 
-        dumpdir = '%s/.cache/%s' % (self.root, hashstr)
+        dumpdir = '%s.cache/%s' % (self.root, hashstr)
         if not path.exists(dumpdir):
             self.load()
-            os.mkdir(dumpdir)
+            os.makedirs(dumpdir)
             self.dump(dumpdir)
 
         self.memmap(dumpdir)
