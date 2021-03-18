@@ -23,8 +23,10 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int, default=8088, help="the port of the dataset serevr")
-parser.add_argument("-s", "--spec", type=str, default='wxbtool.specs.t850', help="spec of a metrological model to load")
+parser.add_argument("-m", "--module", type=str, default='wxbtool.specs.t850', help="module of a metrological model to load")
+parser.add_argument("-s", "--setting", type=str, default='Setting', help="setting for a metrological model spec")
 opt = parser.parse_args()
+
 
 np.core.arrayprint._line_width = 150
 np.set_printoptions(linewidth=np.inf)
@@ -33,9 +35,10 @@ early_stopping = 5
 best = np.inf
 count = 0
 
-mdm = None
 try:
-    mdm = importlib.import_module(opt.spec, package=None)
+    mdm = importlib.import_module(opt.module, package=None)
+    setting = getattr(mdm, opt.setting)()
+    spec = getattr(mdm, 'Spec')(setting)
 except ImportError as e:
     print('failure when loading model')
     sys.exit(1)
@@ -81,11 +84,11 @@ def seek(mode, idx):
 
 
 def main():
-    mdm.model.load_dataset('train')
-    mdm.model.load_dataset('test')
-    dtrain = mdm.model.dataset_train
-    deval = mdm.model.dataset_eval
-    dtest = mdm.model.dataset_test
+    spec.load_dataset('train')
+    spec.load_dataset('test')
+    dtrain = spec.dataset_train
+    deval = spec.dataset_eval
+    dtest = spec.dataset_test
     datasets['train'] = dtrain
     datasets['eval'] = deval
     datasets['test'] = dtest
