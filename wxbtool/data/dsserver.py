@@ -84,22 +84,31 @@ datasets['eval'] = deval
 datasets['test'] = dtest
 
 
-@route("/<string:mode>")
-def length(mode):
+@route("/<string:hash>/<string:mode>")
+def length(hash, mode):
     ds = datasets[mode]
+    if ds.hashcode != hash:
+        return flask.current_app.response_class('not found', status=404, mimetype="application/msgpack")
+
     msg = msgpack.dumps({
         'size': ds.size,
     })
+
     return flask.current_app.response_class(msg, status=200, mimetype="application/msgpack")
 
 
-@route("/<string:mode>/<int:idx>")
-def seek(mode, idx):
-    inputs, targets = datasets[mode][idx]
+@route("/<string:hash>/<string:mode>/<int:idx>")
+def seek(hash, mode, idx):
+    ds = datasets[mode]
+    if ds.hashcode != hash:
+        return flask.current_app.response_class('not found', status=404, mimetype="application/msgpack")
+
+    inputs, targets = ds[idx]
     msg = msgpack.dumps({
         'inputs': inputs,
         'targets': targets,
     })
+
     return flask.current_app.response_class(msg, status=200, mimetype="application/msgpack")
 
 
