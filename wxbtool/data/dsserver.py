@@ -51,7 +51,6 @@ time_str = arrow.now().format('YYYYMMDD_HHmmss')
 model_path = Path(f'./dsserver/{time_str}')
 model_path.mkdir(exist_ok=True, parents=True)
 log_file = model_path / Path('dsserver.log')
-
 logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -60,12 +59,16 @@ logger.info(str(opt))
 
 def setup(appname):
     application = Flask(appname)
-    logger = logging.getLogger(appname)
     application.debug = False
+
+    gunicorn_logger = logging.getLogger('gunicorn.info')
+    app.logger.handlers.extend(gunicorn_logger.handlers)
+    app.logger.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    logger.handlers.extend(app.logger.handlers)
 
     return application
 
