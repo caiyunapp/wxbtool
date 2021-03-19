@@ -35,7 +35,6 @@ setuptools.setup(
         'arrow',
         'python-decouple',
         'leibniz',
-        'webdataset',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
