@@ -59,6 +59,22 @@ class Setting3d(CommonSetting):
         self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
 
+class SettingTest(CommonSetting):
+    def __init__(self):
+        super().__init__()
+        self.step = 8                   # How many hours of a hourly step which all features in organized temporally
+        self.input_span = 3             # How many hourly steps for an input
+        self.pred_span = 1              # How many hourly steps for a prediction
+        self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
+
+        # temporal scopes for train
+        self.years_train = [2013, 2014]
+        # temporal scopes for evaluation
+        self.years_eval = [2015, 2016]
+        # temporal scopes for test
+        self.years_test = [2017, 2018]
+
+
 class Setting5d(CommonSetting):
     def __init__(self):
         super().__init__()

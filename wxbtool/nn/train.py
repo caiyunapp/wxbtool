@@ -34,6 +34,7 @@ parser.add_argument("-m", "--module", type=str, default='wxbtool.zoo.unet.t850d3
 parser.add_argument("-l", "--load", type=str, default='', help="dump file of the metrological model to load")
 parser.add_argument("-k", "--check", type=str, default='', help="checkpoint file to load")
 parser.add_argument("-r", "--rate", type=float, default=0.001, help="learning rate")
+parser.add_argument("-w", "--weightdecay", type=float, default=0.0, help="weight decay")
 parser.add_argument("-d", "--data", type=str, default='', help="url of the dataset server")
 opt = parser.parse_args()
 
@@ -70,9 +71,9 @@ logger.info(str(opt))
 scheduler = None
 
 
-def train_model(mdl):
+def train_model(mdl, lr=0.001, wd=0.0, callback=None):
     global scheduler
-    optimizer = th.optim.Adam(mdl.parameters(), lr=opt.rate)
+    optimizer = th.optim.Adam(mdl.parameters(), lr=lr, weight_decay=wd)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     try:
@@ -126,6 +127,9 @@ def train_model(mdl):
         loss_eval = evaluate(epoch)
         logger.info(f'Epoch: {epoch + 1:03d} | Eval loss: {loss_eval}')
         scheduler.step(loss_eval)
+
+        if callback is not None:
+            callback(epoch, loss_eval)
 
         global best, count
         if loss_eval.item() >= best:
@@ -225,8 +229,8 @@ if __name__ == '__main__':
             mdm.model.load_dataset('train', 'server')
 
         if len(opt.gpu.split(',')) > 0:
-            train_model(nn.DataParallel(mdm.model, output_device=0))
+            train_model(nn.DataParallel(mdm.model, output_device=0), lr=opt.rate, wd=opt.weightdecay)
         else:
-            train_model(mdm.model)
+            train_model(mdm.model, lr=opt.rate, wd=opt.weightdecay)
 
     print('Training Finished!')
