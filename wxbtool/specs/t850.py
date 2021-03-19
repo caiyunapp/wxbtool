@@ -3,7 +3,11 @@
 '''
  A modeling spec for t850
 
- The spec follows basic settings and discussions in UNet with cube-sphere mapping (2 deg) by Weyn et al. 2020
+ This spec follows basic settings and discussions in
+
+   Improving Data‐Driven Global Weather Prediction Using Deep Convolutional Neural Networks on a Cubed Sphere
+   by Jonathan A. Weyn, Dale R. Durran, Rich Caruana
+   https://doi.org/10.1029/2020MS002109
 
 '''
 
@@ -68,8 +72,7 @@ class Spec(Base2d):
     def __init__(self, setting):
         super().__init__(setting)
 
-        # following Weyn's schema from the paper
-        #   UNet with cube-sphere mapping (2 deg) by Weyn et al. 2020
+        # following Weyn's schema from the above paper
         self.name = 't850_weyn'
 
     def get_inputs(self, **kwargs):

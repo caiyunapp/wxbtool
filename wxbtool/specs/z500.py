@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 '''
- A modeling spec for t850
+ A modeling spec for z500
 
- The spec follows basic settings and discussions in UNet with cube-sphere mapping (2 deg) by Weyn et al. 2020
+ This spec follows basic settings and discussions in
+
+   Improving Data‐Driven Global Weather Prediction Using Deep Convolutional Neural Networks on a Cubed Sphere
+   by Jonathan A. Weyn, Dale R. Durran, Rich Caruana
+   https://doi.org/10.1029/2020MS002109
 
 '''
 
@@ -17,11 +21,9 @@ from wxbtool.norms.meanstd import *
 mse = nn.MSELoss()
 
 
-class CommonSetting(Setting):
+class SettingWeyn(Setting):
     def __init__(self):
         super().__init__()
-        self.resolution = '5.625deg'    # The spatial resolution of the model
-
         self.levels = ['300', '500', '700', '850', '1000'] # Which vertical levels to choose
         self.height = len(self.levels)                     # How many vertical levels to choose
 
@@ -46,18 +48,22 @@ class CommonSetting(Setting):
         self.years_test = [2017, 2018]
 
 
-class Setting3d(CommonSetting):
+class Setting3dRes5_625(SettingWeyn):
     def __init__(self):
         super().__init__()
+        self.resolution = '5.625deg'    # The spatial resolution of the model
+
         self.step = 8                   # How many hours of a hourly step which all features in organized temporally
         self.input_span = 3             # How many hourly steps for an input
         self.pred_span = 1              # How many hourly steps for a prediction
         self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
 
-class Setting5d(CommonSetting):
+class Setting5dRes5_625(SettingWeyn):
     def __init__(self):
         super().__init__()
+        self.resolution = '5.625deg'    # The spatial resolution of the model
+
         self.step = 8                   # How many hours of a hourly step which all features in organized temporally
         self.input_span = 3             # How many hourly steps for an input
         self.pred_span = 1              # How many hourly steps for a prediction
