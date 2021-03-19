@@ -79,7 +79,7 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
     try:
         if opt.load != '':
             dump = th.load(opt.load, map_location='cpu')
-            mdm.model.load_state_dict(dump)
+            mdl.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
         sys.exit(1)
@@ -89,31 +89,31 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
 
     def train(epoch, mdl):
         mdl.train()
-        dataloader = DataLoader(mdm.model.dataset_train, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
+        dataloader = DataLoader(mdl.dataset_train, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
         loss_per_epoch = 0.0
         for step, sample in enumerate(dataloader):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdl.setting.vars
             }
             targets = {
-                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdl.setting.vars
             }
 
             if th.cuda.is_available():
                 inputs = {
-                    v: inputs[v].cuda() for v in mdm.setting.vars
+                    v: inputs[v].cuda() for v in mdl.setting.vars
                 }
                 targets = {
-                    v: targets[v].cuda() for v in mdm.setting.vars
+                    v: targets[v].cuda() for v in mdl.setting.vars
                 }
-                mdm.model.constant = mdm.model.constant.cuda()
-                mdm.model.weight = mdm.model.weight.cuda()
+                mdl.constant = mdl.constant.cuda()
+                mdl.weight = mdl.weight.cuda()
 
             optimizer.zero_grad()
             results = mdl(*[], **inputs)
-            loss = mdm.model.lossfun(inputs, results, targets)
+            loss = mdl.lossfun(inputs, results, targets)
             loss.backward()
             optimizer.step()
 
@@ -121,7 +121,7 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
 
             loss_per_epoch += loss.item() * list(results.values())[0].size()[0]
 
-        logger.info(f'Epoch: {epoch + 1:03d} | Train Loss: {loss_per_epoch / mdm.model.train_size}')
+        logger.info(f'Epoch: {epoch + 1:03d} | Train Loss: {loss_per_epoch / mdl.train_size}')
 
         # evaluation
         loss_eval = evaluate(epoch)
@@ -143,56 +143,56 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
 
     def evaluate(epoch):
         mdl.eval()
-        dataloader = DataLoader(mdm.model.dataset_eval, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
+        dataloader = DataLoader(mdl.dataset_eval, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
         loss_per_epoch = 0.0
         rmse_per_epoch_t = 0.0
         for step, sample in enumerate(dataloader):
             inputs, targets = sample
 
             inputs = {
-                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(inputs[v], dtype=th.float32) for v in mdl.setting.vars
             }
             targets = {
-                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdm.setting.vars
+                v: th.as_tensor(targets[v], dtype=th.float32) for v in mdl.setting.vars
             }
 
             if th.cuda.is_available():
                 inputs = {
-                    v: inputs[v].cuda() for v in mdm.setting.vars
+                    v: inputs[v].cuda() for v in mdl.setting.vars
                 }
                 targets = {
-                    v: targets[v].cuda() for v in mdm.setting.vars
+                    v: targets[v].cuda() for v in mdl.setting.vars
                 }
-                mdm.model.constant = mdm.model.constant.cuda()
-                mdm.model.weight = mdm.model.weight.cuda()
+                mdl.constant = mdl.constant.cuda()
+                mdl.weight = mdl.weight.cuda()
 
             with th.no_grad():
                 results = mdl(*[], **inputs)
-                loss = mdm.model.lossfun(inputs, results, targets)
+                loss = mdl.lossfun(inputs, results, targets)
                 logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()}')
                 loss_per_epoch += loss.item() * list(results.values())[0].size()[0]
 
-                _, tgt = mdm.model.get_targets(**targets)
-                _, rst = mdm.model.get_results(**results)
+                _, tgt = mdl.get_targets(**targets)
+                _, rst = mdl.get_results(**results)
                 tgt = tgt.detach().cpu().numpy().reshape(-1, 1, 32, 64)
                 rst = rst.detach().cpu().numpy().reshape(-1, 1, 32, 64)
-                rmse = np.sqrt(np.mean(mdm.model.weight.cpu().numpy() * (rst - tgt) * (rst - tgt)))
+                rmse = np.sqrt(np.mean(mdl.weight.cpu().numpy() * (rst - tgt) * (rst - tgt)))
                 logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()} | Temperature RMSE: {rmse}')
                 rmse_per_epoch_t += np.nan_to_num(rmse * list(results.values())[0].size()[0])
 
-        rmse_total = rmse_per_epoch_t / mdm.model.eval_size
-        logger.info(f'Epoch: {epoch + 1:03d} | Eval Loss: {loss_per_epoch / mdm.model.eval_size}')
+        rmse_total = rmse_per_epoch_t / mdl.eval_size
+        logger.info(f'Epoch: {epoch + 1:03d} | Eval Loss: {loss_per_epoch / mdl.eval_size}')
         logger.info(f'Epoch: {epoch + 1:03d} | Eval RMSE: {rmse_total}')
 
-        vars_in, _ = mdm.model.get_inputs(**inputs)
-        for bas, var in enumerate(mdm.setting.vars_in):
-            for ix in range(mdm.setting.input_span):
+        vars_in, _ = mdl.get_inputs(**inputs)
+        for bas, var in enumerate(mdl.setting.vars_in):
+            for ix in range(mdl.setting.input_span):
                 img = vars_in[var][0, ix].detach().cpu().numpy().reshape(32, 64)
                 plot(var, open('%s_inp_%d.png' % (var, ix), mode='wb'), img)
 
-        vars_fc, _ = mdm.model.get_results(**results)
-        vars_tg, _ = mdm.model.get_targets(**targets)
-        for bas, var in enumerate(mdm.setting.vars_out):
+        vars_fc, _ = mdl.get_results(**results)
+        vars_tg, _ = mdl.get_targets(**targets)
+        for bas, var in enumerate(mdl.setting.vars_out):
             fcst = vars_fc[var][0].detach().cpu().numpy().reshape(32, 64)
             tgrt = vars_tg[var][0].detach().cpu().numpy().reshape(32, 64)
             plot(var, open('%s_fcs.png' % var, mode='wb'), fcst)
