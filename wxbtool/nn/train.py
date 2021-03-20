@@ -232,9 +232,6 @@ if __name__ == '__main__':
         else:
             mdm.model.load_dataset('train', 'server')
 
-        if len(opt.gpu.split(',')) > 0:
-            train_model(nn.DataParallel(mdm.model, output_device=0), lr=opt.rate, wd=opt.weightdecay)
-        else:
-            train_model(mdm.model, lr=opt.rate, wd=opt.weightdecay)
+        train_model(mdm.model, lr=opt.rate, wd=opt.weightdecay)
 
     print('Training Finished!')
