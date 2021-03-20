@@ -47,6 +47,7 @@ np.set_printoptions(linewidth=np.inf)
 
 early_stopping = 5
 best = np.inf
+eval_by_epoch = np.inf
 count = 0
 
 mdm = None
@@ -68,6 +69,7 @@ logger.setLevel(logging.INFO)
 logger.info(str(opt))
 
 
+embbed = False
 scheduler = None
 
 
@@ -77,17 +79,18 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
     scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     try:
-        if opt.load != '':
+        if not embbed and opt.load != '':
             dump = th.load(opt.load, map_location='cpu')
             mdl.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
         sys.exit(1)
 
-    if th.cuda.is_available():
+    if not embbed and th.cuda.is_available():
         mdl = mdl.cuda()
 
     def train(epoch, mdl):
+        global eval_by_epoch
         mdl.train()
         dataloader = DataLoader(mdl.dataset_train, batch_size=opt.batch_size, shuffle=True, num_workers=opt.n_cpu)
         loss_per_epoch = 0.0
@@ -101,7 +104,7 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
                 v: th.as_tensor(targets[v], dtype=th.float32) for v in mdl.setting.vars
             }
 
-            if th.cuda.is_available():
+            if not embbed and th.cuda.is_available():
                 inputs = {
                     v: inputs[v].cuda() for v in mdl.setting.vars
                 }
@@ -127,6 +130,7 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
         loss_eval = evaluate(epoch)
         logger.info(f'Epoch: {epoch + 1:03d} | Eval loss: {loss_eval}')
         scheduler.step(loss_eval)
+        eval_by_epoch = loss_eval
 
         if callback is not None:
             callback(epoch, loss_eval)
