@@ -11,7 +11,7 @@
 import torch as th
 
 from leibniz.nn.activation import CappingRelu
-from leibniz.nn.net import resunet, hyptub, linear
+from leibniz.nn.net import resunet
 from leibniz.unet.hyperbolic import HyperBottleneck
 
 from wxbtool.specs.t850 import Spec, Setting3d
@@ -22,13 +22,11 @@ class ResUNetModel(Spec):
         super().__init__(setting)
         self.name = 't850hg'
 
-        enhencer = hyptub(1408, 704, 1408, encoder=linear, decoder=linear)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
                             vblks=[9, 9, 9, 9, 9], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
-                            block=HyperBottleneck, relu=CappingRelu(), enhencer=enhencer,
-                            final_normalized=False)
+                            block=HyperBottleneck, relu=CappingRelu(), final_normalized=False)
 
     def forward(self, **kwargs):
         batch_size = kwargs['temperature'].size()[0]

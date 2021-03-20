@@ -19,11 +19,10 @@ from wxbtool.specs.t850 import Spec, Setting3d
 
 
 class Enhencer(nn.Module):
-    def __init__(self, channels):
+    def __init__(self, channels_in, channels_hidden, channels_out):
         super(Enhencer, self).__init__()
-        hidden = channels * 2
-        self.fci = nn.Linear(channels, hidden)
-        self.fco = nn.Linear(hidden, channels)
+        self.fci = nn.Linear(channels_in, channels_hidden)
+        self.fco = nn.Linear(channels_hidden, channels_out)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -38,13 +37,11 @@ class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
         self.name = 't850'
-
-        enhencer = Enhencer(3328)
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
                             vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
-                            block=SEBottleneck, relu=CappingRelu(), enhencer=enhencer,
+                            block=SEBottleneck, relu=CappingRelu(), enhencer=Enhencer,
                             final_normalized=False)
 
     def forward(self, **kwargs):
