@@ -35,7 +35,6 @@ print('cudnn:', th.backends.cudnn.version())
 np.core.arrayprint._line_width = 150
 np.set_printoptions(linewidth=np.inf)
 
-name = opt.model
 early_stopping = 5
 best = np.inf
 count = 0
