@@ -18,21 +18,6 @@ from leibniz.unet.senet import SEBottleneck
 from wxbtool.specs.t850 import Spec, Setting3d
 
 
-class Enhencer(nn.Module):
-    def __init__(self, channels_in, channels_hidden, channels_out):
-        super(Enhencer, self).__init__()
-        self.fci = nn.Linear(channels_in, channels_hidden)
-        self.fco = nn.Linear(channels_hidden, channels_out)
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        b, c, h, w = x.size()
-        out = self.fci(x.view(b, c * h * w))
-        out = self.relu(out)
-        out = self.fco(out).view(b, c, h, w)
-        return out
-
-
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
@@ -41,8 +26,7 @@ class ResUNetModel(Spec):
                             spatial=(32, 64+2), layers=5, ratio=-1,
                             vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
-                            block=SEBottleneck, relu=CappingRelu(), enhencer=Enhencer,
-                            final_normalized=False)
+                            block=SEBottleneck, relu=CappingRelu(), final_normalized=False)
 
     def forward(self, **kwargs):
         batch_size = kwargs['temperature'].size()[0]
