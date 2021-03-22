@@ -9,13 +9,12 @@
 '''
 
 import torch as th
-import torch.nn as nn
 
 from leibniz.nn.net import resunet
 from leibniz.nn.activation import CappingRelu
 from leibniz.unet.senet import SEBottleneck
 
-from wxbtool.specs.t850 import Spec, Setting3d
+from wxbtool.specs.res5_625.t850weyn import Spec, Setting3d
 
 
 class ResUNetModel(Spec):
