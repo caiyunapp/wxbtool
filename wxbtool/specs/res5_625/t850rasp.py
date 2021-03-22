@@ -26,15 +26,23 @@ class SettingRasp(Setting):
         super().__init__()
         self.resolution = '5.625deg'    # The spatial resolution of the model
 
-        self.levels = ['50', '250', '500', '600', '700', '850', '925'] # Which vertical levels to choose
-        self.height = len(self.levels)                     # How many vertical levels to choose
+        # Which vertical levels to choose
+        self.levels = ['50', '250', '500', '600', '700', '850', '925']
+        # How many vertical levels to choose
+        self.height = len(self.levels)
 
         # The name of variables to choose, for both input features and output
         self.vars = ['geopotential', 'temperature', 'specific_humidity', 'u_component_of_wind', 'v_component_of_wind',
-                     'toa_incident_solar_radiation', '2m_temperature', 'total_precipitation']
+                     '2m_temperature', 'total_precipitation', 'toa_incident_solar_radiation']
 
         # The code of variables in input features
-        self.vars_in = ['z500', 'z1000', 'tau', 't850', 't2m', 'tisr']
+        self.vars_in = ['z50', 'z250', 'z500', 'z600', 'z700', 'z850', 'z925',
+                        't50', 't250', 't500', 't600', 't700', 't850', 't925',
+                        'q50', 'q250', 'q500', 'q600', 'q700', 'q850', 'q925',
+                        'u50', 'u250', 'u500', 'u600', 'u700', 'u850', 'u925',
+                        'v50', 'v250', 'v500', 'v600', 'v700', 'v850', 'v925',
+                        't2m', 'tp', 'tisr']
+
         # The code of variables in output
         self.vars_out = ['t850']
 
@@ -77,31 +85,26 @@ class Spec(Base2d):
         self.name = 't850_rasp'
 
     def get_inputs(self, **kwargs):
-        z500 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
+        z50 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
         z1000 = norm_z1000(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])
-        tau = norm_tau(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('300')] - kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('700')])
-        t850 = norm_t850(kwargs['temperature'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')])
         t2m = norm_t2m(kwargs['2m_temperature'].view(-1, self.setting.input_span, 32, 64))
+        tp = norm_tp(kwargs['total_precipitation'].view(-1, self.setting.input_span, 32, 64))
         tisr = norm_tisr(kwargs['toa_incident_solar_radiation'].view(-1, self.setting.input_span, 32, 64))
 
         z500 = self.augment_data(z500)
-        z1000 = self.augment_data(z1000)
-        tau = self.augment_data(tau)
-        t850 = self.augment_data(t850)
         t2m = self.augment_data(t2m)
+        tp = self.augment_data(tp)
         tisr = self.augment_data(tisr)
 
         return {
             'z500': z500,
             'z1000': z1000,
-            'tau': tau,
             't850': t850,
             't2m': t2m,
             'tisr': tisr,
         }, th.cat((
-            z500, z1000,
-            tau, t850,
-            t2m, tisr,
+            z50, z1000,
+            t2m, tp, tisr,
         ), dim=1)
 
     def get_targets(self, **kwargs):
