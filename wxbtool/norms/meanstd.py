@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+import torch as th
+
 
 def norm_t2m(t2m):
     return (t2m - 278.5193277994792) / 21.219592501509624
@@ -7,6 +10,11 @@ def norm_t2m(t2m):
 
 def norm_tcc(tcc):
     return (tcc - 0.6740332964139107) / 0.3626919709448507
+
+
+def norm_tp(tp):
+    tp = th.log(0.001 + tp) - np.log(0.001)
+    return (tp - 0.07109370560218127) / 0.1847837422860926
 
 
 def norm_tisr(tisr):
@@ -169,6 +177,10 @@ def denorm_tcc(tcc):
     return tcc * 0.3626919709448507 + 0.6740332964139107
 
 
+def denorm_tp(tp):
+    return np.exp((tp * 0.1847837422860926 + 0.07109370560218127) + np.log(0.001)) - 0.001
+
+
 def denorm_tisr(tisr):
     return tisr * 1439848.7984975462 + 1074511.0673076923
 
@@ -324,6 +336,7 @@ def denorm_q925(q925):
 normalizors = {
     't2m': norm_t2m,
     'tcc': norm_tcc,
+    'tp': norm_tp,
     'tisr': norm_tisr,
     't50': norm_t50,
     't250': norm_t250,
@@ -368,6 +381,7 @@ normalizors = {
 denormalizors = {
     't2m': denorm_t2m,
     'tcc': denorm_tcc,
+    'tp': denorm_tp,
     'tisr': denorm_tisr,
     't50': denorm_t50,
     't250': denorm_t250,
