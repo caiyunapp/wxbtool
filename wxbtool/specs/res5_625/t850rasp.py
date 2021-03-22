@@ -15,7 +15,8 @@ import torch as th
 import torch.nn as nn
 from wxbtool.nn.model import Base2d
 from wxbtool.nn.setting import Setting
-from wxbtool.norms.meanstd import *
+from wxbtool.data.variables import vars3d, code2var, split_name
+from wxbtool.norms.meanstd import normalizors, denorm_t850
 
 
 mse = nn.MSELoss()
@@ -85,27 +86,19 @@ class Spec(Base2d):
         self.name = 't850_rasp'
 
     def get_inputs(self, **kwargs):
-        z50 = norm_z500(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('500')])
-        z1000 = norm_z1000(kwargs['geopotential'].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index('1000')])
-        t2m = norm_t2m(kwargs['2m_temperature'].view(-1, self.setting.input_span, 32, 64))
-        tp = norm_tp(kwargs['total_precipitation'].view(-1, self.setting.input_span, 32, 64))
-        tisr = norm_tisr(kwargs['toa_incident_solar_radiation'].view(-1, self.setting.input_span, 32, 64))
+        vdic, vlst = {}, []
+        for nm in self.setting.vars_in:
+            v, l = split_name(nm)
+            if v in vars3d:
+                d = kwargs[code2var[v]].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index(l)]
+            else:
+                d = kwargs[code2var[v]].view(-1, self.setting.input_span, 32, 64)
+            d = normalizors[nm](d)
+            d = self.augment_data(d)
+            vdic[nm] = d
+            vlst.append(d)
 
-        z500 = self.augment_data(z500)
-        t2m = self.augment_data(t2m)
-        tp = self.augment_data(tp)
-        tisr = self.augment_data(tisr)
-
-        return {
-            'z500': z500,
-            'z1000': z1000,
-            't850': t850,
-            't2m': t2m,
-            'tisr': tisr,
-        }, th.cat((
-            z50, z1000,
-            t2m, tp, tisr,
-        ), dim=1)
+        return vdic, th.cat(vlst, dim=1)
 
     def get_targets(self, **kwargs):
         t850 = kwargs['temperature'].view(-1, 1, self.setting.height, 32, 64)[:, :, self.setting.levels.index('850')]

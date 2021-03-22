@@ -4,8 +4,8 @@
     Demo model in wxbtool package
 
     This model predict t850 3-days in the future
-    it cost more memory and can be fitted into one P40 gpu at batch size 8
-    the weighted rmse is 2.02 K
+    it cost more memory and can be fitted into one P40 gpu at batch size 64
+    the weighted rmse is 2.23 K
 '''
 
 import torch as th
@@ -20,11 +20,10 @@ from wxbtool.specs.res5_625.t850weyn import Spec, Setting3d
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
-        self.name = 't850hg'
-
+        self.name = 't8503dbg-weyn'
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
-                            vblks=[9, 9, 9, 9, 9], hblks=[1, 1, 1, 1, 1],
+                            vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
                             block=HyperBottleneck, relu=CappingRelu(), final_normalized=False)
 

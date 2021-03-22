@@ -17,8 +17,8 @@ class Setting:
         self.height = len(self.levels)
 
         self.vars = ['geopotential', 'toa_incident_solar_radiation', '2m_temperature', 'temperature', 'total_cloud_cover']
-        self.params_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
-        self.params_out = ['t850', 'z500']
+        self.vars_in = ['z500', 'z1000', 'tau', 't850', 'tcc', 't2m', 'tisr']
+        self.vars_out = ['t850', 'z500']
 
         self.years_train = [
             1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989,
