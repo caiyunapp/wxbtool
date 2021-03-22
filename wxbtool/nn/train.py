@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import argparse
 import importlib
 import logging
 import resource
@@ -12,7 +11,6 @@ import arrow
 import numpy as np
 import sys
 import torch as th
-import torch.nn as nn
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -22,23 +20,6 @@ from wxbtool.util.plotter import plot
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-g", "--gpu", type=str, default='0', help="index of gpu")
-parser.add_argument("-c", "--n_cpu", type=int, default=64, help="number of cpu threads to use during batch generation")
-parser.add_argument("-b", "--batch_size", type=int, default=64, help="size of the batches")
-parser.add_argument("-e", "--epoch", type=int, default=0, help="current epoch to start training from")
-parser.add_argument("-n", "--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("-m", "--module", type=str, default='wxbtool.zoo.unet.t850d3', help="module of the metrological model to load")
-parser.add_argument("-l", "--load", type=str, default='', help="dump file of the metrological model to load")
-parser.add_argument("-k", "--check", type=str, default='', help="checkpoint file to load")
-parser.add_argument("-r", "--rate", type=float, default=0.001, help="learning rate")
-parser.add_argument("-w", "--weightdecay", type=float, default=0.0, help="weight decay")
-parser.add_argument("-d", "--data", type=str, default='', help="url of the dataset server")
-opt = parser.parse_args()
-
-os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
 
 print('cudnn:', th.backends.cudnn.version())
 
@@ -50,30 +31,12 @@ best = np.inf
 eval_by_epoch = np.inf
 count = 0
 
-mdm = None
-try:
-    mdm = importlib.import_module(opt.module, package=None)
-except ImportError as e:
-    print('failure when loading model')
-    sys.exit(1)
-
-name = mdm.model.name
-time_str = arrow.now().format('YYYYMMDD_HHmmss')
-model_path = Path(f'./trains/{name}-{time_str}')
-model_path.mkdir(exist_ok=True, parents=True)
-log_file = model_path / Path('train.log')
-
-logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.info(str(opt))
-
 
 embbed = False
 scheduler = None
 
 
-def train_model(mdl, lr=0.001, wd=0.0, callback=None):
+def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logger=None):
     global scheduler
     optimizer = th.optim.Adam(mdl.parameters(), lr=lr, weight_decay=wd)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
@@ -225,13 +188,31 @@ def train_model(mdl, lr=0.001, wd=0.0, callback=None):
         logger.exception(e)
 
 
-if __name__ == '__main__':
-    if mdm != None:
-        if opt.data != '':
-            mdm.model.load_dataset('train', 'client', url=opt.data)
-        else:
-            mdm.model.load_dataset('train', 'server')
+def main(context, opt):
+    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+    try:
+        mdm = importlib.import_module(opt.module, package=None)
 
-        train_model(mdm.model, lr=opt.rate, wd=opt.weightdecay)
+        name = mdm.model.name
+        time_str = arrow.now().format('YYYYMMDD_HHmmss')
+        model_path = Path(f'./trains/{name}-{time_str}')
+        model_path.mkdir(exist_ok=True, parents=True)
+        log_file = model_path / Path('train.log')
 
-    print('Training Finished!')
+        logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        logger.info(str(opt))
+
+        if mdm != None:
+            if opt.data != '':
+                mdm.model.load_dataset('train', 'client', url=opt.data)
+            else:
+                mdm.model.load_dataset('train', 'server')
+
+            train_model(opt, mdm.model, lr=opt.rate, wd=opt.weightdecay, model_path=model_path, logger=logger)
+
+        print('Training Finished!')
+    except ImportError as e:
+        print('failure when loading model')
+        sys.exit(1)

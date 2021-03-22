@@ -40,8 +40,14 @@ setuptools.setup(
         'msgpack-numpy',
         'requests',
         'gunicorn',
+        'arghandler',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
+    entry_points={
+        'console_scripts': [
+            'wxb = wxbtool.wxb:main',
+        ]
+    }
 )
 
