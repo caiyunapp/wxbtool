@@ -7,9 +7,7 @@ from wxbtool.nn.test import main as ttmain
 
 @subcmd
 def echo(parser, context, args):
-    parser.add_argument('-h', '--help', required=True)
-    opt = parser.parse_args(args)
-
+    pass
 
 @subcmd('dserve', help='start the dataset server')
 def dserve(parser, context, args):
@@ -79,5 +77,7 @@ def test(parser, context, args):
 
 
 def main():
+    import sys
+
     handler = ArgumentHandler()
-    handler.run(['echo', '-h'])
+    handler.run(sys.argv)

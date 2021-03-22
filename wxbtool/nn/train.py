@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import importlib
 import logging
 import resource
-
-from pathlib import Path
-
 import arrow
 import numpy as np
-import sys
 import torch as th
+
+from pathlib import Path
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
