@@ -6,7 +6,7 @@ from wxbtool.nn.test import main as ttmain
 
 
 @subcmd
-def echo(parser, context, args):
+def help(parser, context, args):
     pass
 
 @subcmd('dserve', help='start the dataset server')
@@ -80,4 +80,7 @@ def main():
     import sys
 
     handler = ArgumentHandler()
-    handler.run(sys.argv)
+    if len(sys.argv) < 2:
+        handler.run(['help'])
+    else:
+        handler.run(sys.argv[1:])

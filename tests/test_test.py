@@ -20,6 +20,6 @@ class TestTest(unittest.TestCase):
     @mock.patch.dict(os.environ, {"WXBHOME": str(pathlib.Path(__file__).parent.absolute())})
     def test_test(self):
         import wxbtool.wxb as wxb
-        testargs = ['test', '-m', 'models.tgt_mdl']
+        testargs = ['wxb', 'test', '-m', 'models.tgt_mdl']
         with patch.object(sys, 'argv', testargs):
             wxb.main()

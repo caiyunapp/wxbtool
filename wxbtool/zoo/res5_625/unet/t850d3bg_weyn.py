@@ -20,7 +20,7 @@ from wxbtool.specs.res5_625.t850weyn import Spec, Setting3d
 class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
-        self.name = 't8503dbg-weyn'
+        self.name = 't850d3bg-weyn'
         self.resunet = resunet(setting.input_span * (len(setting.vars) + 2) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-1,
                             vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
