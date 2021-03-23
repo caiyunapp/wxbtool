@@ -44,8 +44,6 @@ class Model2d(nn.Module):
 
         dt = th.cos(phi)
         self.weight = dt / dt.mean()
-        print(th.sum(self.weight).item())
-        print(th.sum(th.relu(self.weight)).item())
 
         lsm = ((lsm - 0.33707827) / 0.45900375).view(1, 1, 32, 64)
         slt = ((slt - 0.67920434) / 1.1688842).view(1, 1, 32, 64)

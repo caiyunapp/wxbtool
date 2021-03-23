@@ -9,9 +9,11 @@
 '''
 
 import numpy as np
+import torch as th
 
 from torch.utils.data import Dataset
 from leibniz.nn.net.mlp import MLP2d
+from wxbtool.data.variables import vars3d
 from wxbtool.specs.res5_625.t850weyn import Spec, Setting3d
 
 
@@ -25,8 +27,12 @@ class TestDataset(Dataset):
     def __getitem__(self, item):
         inputs, targets = {}, {}
         for var in setting.vars:
-            inputs.update({var: np.ones((1, 15, 32, 64))})
-            targets.update({var: np.ones((1, 15, 32, 64))})
+            if var in vars3d:
+                inputs.update({var: np.ones((1, setting.input_span, setting.height, 32, 64))})
+                targets.update({var: np.ones((1, 1, setting.height, 32, 64))})
+            else:
+                inputs.update({var: np.ones((1, setting.input_span, 32, 64))})
+                targets.update({var: np.ones((1, 1, 32, 64))})
         return inputs, targets
 
 
@@ -34,7 +40,7 @@ class TgtMdl(Spec):
     def __init__(self, setting):
         super().__init__(setting)
         self.name = 'tgt_mdl'
-        self.mlp = MLP2d(1, 1)
+        self.mlp = MLP2d(self.setting.input_span * len(self.setting.vars_in) + self.constant_size + 2, 1)
 
     def load_dataset(self, phase, mode, **kwargs):
         self.phase = phase
@@ -53,12 +59,13 @@ class TgtMdl(Spec):
         self.update_da_status(batch_size)
 
         _, input = self.get_inputs(**kwargs)
-        _ = self.get_augmented_constant(input)
+        cnst = self.get_augmented_constant(input)
+        input = th.cat((input, cnst), dim=1)
 
         output = self.mlp(input)
 
         return {
-            't850': output
+            't850': output.view(batch_size, 1, 32, 64)
         }
 
 

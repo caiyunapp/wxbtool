@@ -34,7 +34,7 @@ def test_model(opt, mdl, logger=None):
             mdl.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
-        sys.exit(1)
+        raise e
 
     if th.cuda.is_available():
         mdl = mdl.cuda()
@@ -103,6 +103,7 @@ def test_model(opt, mdl, logger=None):
     try:
         test(mdl)
     except Exception as e:
+        print(e)
         logger.exception(e)
 
 
@@ -120,6 +121,9 @@ def main(context, opt):
         logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logger.addHandler(handler)
         logger.info(str(opt))
         if mdm != None:
             if opt.data != '':
@@ -128,6 +132,6 @@ def main(context, opt):
                 mdm.model.load_dataset('test', 'server')
             test_model(opt, mdm.model, logger=logger)
         print('Test Finished!')
-    except ImportError:
+    except ImportError as e:
         print('failure when loading model')
-        sys.exit(1)
+        raise e

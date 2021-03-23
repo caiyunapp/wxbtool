@@ -20,7 +20,7 @@ def imgdata():
 
 def colorize(data, out, cmap):
     data = data.reshape(32, 64)
-    data = (data - data.min()) / (data.max() - data.min())
+    data = (data - data.min() + 0.0001) / (data.max() - data.min() + 0.0001)
     data = (data * (data >= 0) * (data < 1) + (data >= 1)) * 255
     fliped = (data[::-1, :]).astype(np.uint8)
     return np.take(cmaps[cmap], fliped, axis=0, out=out)

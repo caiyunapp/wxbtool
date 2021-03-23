@@ -46,7 +46,7 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
             mdl.load_state_dict(dump)
     except ImportError as e:
         logger.exception(e)
-        sys.exit(1)
+        raise e
 
     if not embbed and th.cuda.is_available():
         mdl = mdl.cuda()
@@ -185,6 +185,7 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
             train(epoch, mdl)
     except Exception as e:
         logger.exception(e)
+        raise e
 
 
 def main(context, opt):
@@ -201,6 +202,9 @@ def main(context, opt):
         logging.basicConfig(level=logging.INFO, filename=log_file, filemode='w')
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logger.addHandler(handler)
         logger.info(str(opt))
 
         if mdm != None:
@@ -214,4 +218,4 @@ def main(context, opt):
         print('Training Finished!')
     except ImportError as e:
         print('failure when loading model')
-        sys.exit(1)
+        raise e

@@ -30,7 +30,7 @@ def dserve(parser, context, args):
 def train(parser, context, args):
     parser.add_argument("-g", "--gpu", type=str, default='0',
         help="index of gpu")
-    parser.add_argument("-c", "--n_cpu", type=int, default=64,
+    parser.add_argument("-c", "--n_cpu", type=int, default=8,
         help="number of cpu threads to use during batch generation")
     parser.add_argument("-b", "--batch_size", type=int, default=64,
         help="size of the batches")
@@ -59,7 +59,7 @@ def train(parser, context, args):
 def test(parser, context, args):
     parser.add_argument("-g", "--gpu", type=str, default='0',
         help="index of gpu")
-    parser.add_argument("-c", "--n_cpu", type=int, default=64,
+    parser.add_argument("-c", "--n_cpu", type=int, default=8,
         help="number of cpu threads to use during batch generation")
     parser.add_argument("-b", "--batch_size", type=int, default=64,
         help="size of the batches")
