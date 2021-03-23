@@ -1313,18 +1313,15 @@ cmaps = {
 
 
 var2cmap = {
-    'temperature': 'coolwarm',
-    'geopotential': 'coolwarm',
-    'z500': 'coolwarm',
-    'z1000': 'coolwarm',
-    'tau': 'coolwarm',
-    't850': 'coolwarm',
+    'tp': 'coolwarm',
     'tcc': 'coolwarm',
     't2m': 'coolwarm',
     'tisr': 'coolwarm',
-    'u500': 'coolwarm',
-    'u1000': 'coolwarm',
-    'v500': 'coolwarm',
-    'v1000': 'coolwarm',
+    'q': 'coolwarm',
+    'u': 'coolwarm',
+    'v': 'coolwarm',
+    't': 'coolwarm',
+    'z': 'coolwarm',
+    'tau': 'coolwarm',
 }
 

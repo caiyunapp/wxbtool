@@ -14,7 +14,7 @@ import torch as th
 from torch.utils.data import Dataset
 from leibniz.nn.net.mlp import MLP2d
 from wxbtool.data.variables import vars3d
-from wxbtool.specs.res5_625.t850weyn import Spec, Setting3d
+from wxbtool.specs.res5_625.t850rasp import Spec, Setting3d
 
 
 setting = Setting3d()

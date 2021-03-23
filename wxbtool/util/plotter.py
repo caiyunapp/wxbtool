@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 
 from threading import local
+from wxbtool.data.variables import split_name
 from wxbtool.util.cmaps import cmaps, var2cmap
 
 
@@ -33,4 +34,5 @@ def imsave(fileobj, data):
 
 
 def plot(var, fileobj, data):
-    imsave(fileobj, colorize(data, imgdata(), var2cmap[var]))
+    code, _ = split_name(var)
+    imsave(fileobj, colorize(data, imgdata(), var2cmap[code]))

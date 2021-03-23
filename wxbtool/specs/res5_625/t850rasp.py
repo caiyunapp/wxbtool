@@ -88,11 +88,12 @@ class Spec(Base2d):
     def get_inputs(self, **kwargs):
         vdic, vlst = {}, []
         for nm in self.setting.vars_in:
-            v, l = split_name(nm)
+            c, l = split_name(nm)
+            v = code2var[c]
             if v in vars3d:
-                d = kwargs[code2var[v]].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index(l)]
+                d = kwargs[v].view(-1, self.setting.input_span, self.setting.height, 32, 64)[:, :, self.setting.levels.index(l)]
             else:
-                d = kwargs[code2var[v]].view(-1, self.setting.input_span, 32, 64)
+                d = kwargs[v].view(-1, self.setting.input_span, 32, 64)
             d = normalizors[nm](d)
             d = self.augment_data(d)
             vdic[nm] = d
