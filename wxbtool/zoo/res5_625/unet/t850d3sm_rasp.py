@@ -21,7 +21,7 @@ class ResUNetModel(Spec):
     def __init__(self, setting):
         super().__init__(setting)
         self.name = 't850d3sm-rasp'
-        self.resunet = resunet(setting.input_span * len(setting.vars) + self.constant_size + 2, 1,
+        self.resunet = resunet(setting.input_span * len(setting.vars_in) + self.constant_size + 2, 1,
                             spatial=(32, 64+2), layers=5, ratio=-2,
                             vblks=[2, 2, 2, 2, 2], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
