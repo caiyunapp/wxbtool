@@ -5,7 +5,7 @@
 
     This model predict t850 3-days in the future
     The performance is relative weak, but it can be easily fitted into one normal gpu
-    the weighted rmse is 2.22 K
+    the weighted rmse is 2.17 K
 '''
 
 import torch as th
