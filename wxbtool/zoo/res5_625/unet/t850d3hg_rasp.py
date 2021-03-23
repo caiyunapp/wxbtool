@@ -23,7 +23,7 @@ class ResUNetModel(Spec):
         self.name = 't850d3hg-rasp'
 
         self.resunet = resunet(setting.input_span * len(setting.vars_in) + self.constant_size + 2, 1,
-                            spatial=(32, 64+2), layers=5, ratio=-3,
+                            spatial=(32, 64+2), layers=5, ratio=-4,
                             vblks=[9, 9, 9, 9, 9], hblks=[1, 1, 1, 1, 1],
                             scales=[-1, -1, -1, -1, -1], factors=[1, 1, 1, 1, 1],
                             block=HyperBottleneck, relu=CappingRelu(), final_normalized=False)
