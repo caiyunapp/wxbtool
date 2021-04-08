@@ -101,6 +101,8 @@ def seek(hash, mode, idx):
 def main(context, opt):
     import gunicorn.app.base
 
+    init(opt)
+
     class StandaloneApplication(gunicorn.app.base.BaseApplication):
         def __init__(self, app, options=None):
             self.options = options or {}
