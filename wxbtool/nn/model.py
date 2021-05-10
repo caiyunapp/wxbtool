@@ -74,6 +74,8 @@ class Model2d(nn.Module):
         self.test_size = -1
         self.eval_size = -1
 
+        self.clipping_threshold = 3.0
+
     def load_dataset(self, phase, mode, **kwargs):
         if phase == 'train':
             if mode == 'server':

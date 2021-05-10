@@ -11,6 +11,7 @@ import torch as th
 
 from pathlib import Path
 
+from torch.nn.utils import clip_grad_norm
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
@@ -80,6 +81,7 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
             results = mdl(*[], **inputs)
             loss = mdl.lossfun(inputs, results, targets)
             loss.backward()
+            clip_grad_norm(mdl.parameters(), mdl.clipping_threshold)
             optimizer.step()
 
             logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()}')
