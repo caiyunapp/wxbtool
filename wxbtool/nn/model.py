@@ -212,3 +212,52 @@ class Base2d(Model2d):
     def lossfun(self, inputs, result, target):
         raise NotImplementedError()
         return 0.0
+
+
+class Base3d(Base2d):
+    def __init__(self, setting, enable_da=False):
+        super().__init__(setting, enable_da)
+
+    def augment_data(self, data):
+        if self.enable_da and self.training:
+            augmented = []
+            b, c, t, w, h = data.size()
+            for _ in range(b):
+                slice = data[_:_+1]
+                shift = self.lng_shift[_]
+                flip = self.flip_status[_]
+                slice = slice.roll(shift, dims=(4,))
+                if flip == 1:
+                    slice = th.flip(slice, dims=(3, 4))
+                augmented.append(slice)
+            data = th.cat(augmented, dim=0)
+        return data
+
+    def get_augmented_constant(self, input):
+        b = input.size()[0]
+        constant = self.get_constant(input, input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
+        constant = self.augment_data(constant)
+        phi = self.get_phi(input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
+        theta = self.get_theta(input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
+        constant = th.cat((constant, phi, theta), dim=1)
+        return constant
+
+    def get_inputs(self, **kwargs):
+        raise NotImplementedError()
+        return {}, None
+
+    def get_targets(self, **kwargs):
+        raise NotImplementedError()
+        return {}, None
+
+    def get_results(self, **kwargs):
+        raise NotImplementedError()
+        return {}, None
+
+    def forward(self, *args, **kwargs):
+        raise NotImplementedError()
+        return {}
+
+    def lossfun(self, inputs, result, target):
+        raise NotImplementedError()
+        return 0.0
