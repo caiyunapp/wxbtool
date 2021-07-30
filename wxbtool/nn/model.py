@@ -234,11 +234,11 @@ class Base3d(Base2d):
         return data
 
     def get_augmented_constant(self, input):
-        b = input.size()[0]
-        constant = self.get_constant(input, input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
+        b, c, t, w, h = input.size()
+        constant = self.get_constant(input, input.device).repeat(b, 1, t, 1, 1)
         constant = self.augment_data(constant)
-        phi = self.get_phi(input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
-        theta = self.get_theta(input.device).repeat(b, 1, 1, 1).view(b, 1, 1, 1, 1)
+        phi = self.get_phi(input.device).repeat(b, 1, t, 1, 1)
+        theta = self.get_theta(input.device).repeat(b, 1, t, 1, 1)
         constant = th.cat((constant, phi, theta), dim=1)
         return constant
 
