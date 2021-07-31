@@ -28,7 +28,7 @@ class Setting3d4cube(SettingRasp):
     def __init__(self):
         super().__init__()
         self.step = 8                   # How many hours of a hourly step which all features in organized temporally
-        self.input_span = 32             # How many hourly steps for an input
+        self.input_span = 24             # How many hourly steps for an input
         self.pred_span = 1              # How many hourly steps for a prediction
         self.pred_shift = 72            # How many hours between the end of the input span and the beginning of prediction span
 
@@ -37,7 +37,7 @@ class Setting5d4cube(SettingRasp):
     def __init__(self):
         super().__init__()
         self.step = 8                   # How many hours of a hourly step which all features in organized temporally
-        self.input_span = 32             # How many hourly steps for an input
+        self.input_span = 24             # How many hourly steps for an input
         self.pred_span = 1              # How many hourly steps for a prediction
         self.pred_shift = 120           # How many hours between the end of the input span and the beginning of prediction span
 
