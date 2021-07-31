@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="wxbtool",
-    version="0.0.48",
+    version="0.0.49",
     author="Mingli Yuan",
     author_email="mingli.yuan@gmail.com",
     description="A toolkit for WeatherBench based on PyTorch",

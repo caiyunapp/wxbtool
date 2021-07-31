@@ -38,6 +38,10 @@ class WxDataset(Dataset):
         self.levels = levels
         self.inputs = {}
         self.targets = {}
+        self.shapes = {
+            'inputs': {},
+            'targets': {},
+        }
 
         if resolution == '5.625deg':
             self.height = 13
@@ -50,18 +54,18 @@ class WxDataset(Dataset):
 
         dumpdir = path.abspath('%s/.cache/%s' % (self.root, hashstr))
         if not path.exists(dumpdir):
-            self.load()
             os.makedirs(dumpdir)
-            self.dump(dumpdir)
+            self.load(dumpdir)
 
         self.memmap(dumpdir)
 
-    def load(self):
+    def load(self, dumpdir):
         levels_selector = []
         for l in self.levels:
             levels_selector.append(all_levels.index(l))
         selector = np.array(levels_selector, dtype=np.int)
 
+        lastvar = None
         size, dti, dto = self.init_holders(self.vars)
         for var, yr in product(self.vars, self.years):
             if var in vars3d:
@@ -74,16 +78,23 @@ class WxDataset(Dataset):
             dti[var].append(chi)
             dto[var].append(cho)
 
-        self.size = size // len(self.vars)
-        for v in self.vars:
-            input = np.concatenate(tuple(dti[v]), axis=0)
-            target = np.concatenate(tuple(dto[v]), axis=0)
-            dti[v] = None
-            dto[v] = None
+            if lastvar and lastvar != var:
+                input = np.concatenate(tuple(dti[lastvar]), axis=0)
+                target = np.concatenate(tuple(dto[lastvar]), axis=0)
+                dti[lastvar] = None
+                dto[lastvar] = None
 
-            self.inputs[v] = input
-            self.targets[v] = target
+                self.inputs[lastvar] = input
+                self.targets[lastvar] = target
+                self.dump_var(dumpdir, lastvar)
+
+            lastvar = var
+
+        self.size = size // len(self.vars)
         logger.info('total %s items loaded!', self.size)
+
+        with open('%s/shapes.json' % dumpdir, mode='w') as fp:
+            json.dump(self.shapes, fp)
 
     def init_holders(self, vars):
         return 0, {k: [] for k in vars}, {k: [] for k in vars}
@@ -138,26 +149,17 @@ class WxDataset(Dataset):
 
         return length, dti, dto
 
-    def dump(self, dumpdir):
-        shapes = {
-            'inputs': {},
-            'targets': {},
-        }
+    def dump_var(self, dumpdir, var):
+        input_dump = '%s/input_%s.npy' % (dumpdir, var)
+        target_dump = '%s/target_%s.npy' % (dumpdir, var)
 
-        for var in self.vars:
-            input_dump = '%s/input_%s.npy' % (dumpdir, var)
-            target_dump = '%s/target_%s.npy' % (dumpdir, var)
+        self.shapes['inputs'][var] = self.inputs[var].shape
+        np.save(input_dump, self.inputs[var])
+        del self.inputs[var]
 
-            shapes['inputs'][var] = self.inputs[var].shape
-            np.save(input_dump, self.inputs[var])
-            del self.inputs[var]
-
-            shapes['targets'][var] = self.targets[var].shape
-            np.save(target_dump, self.targets[var])
-            del self.targets[var]
-
-        with open('%s/shapes.json' % dumpdir, mode='w') as fp:
-            json.dump(shapes, fp)
+        self.shapes['targets'][var] = self.targets[var].shape
+        np.save(target_dump, self.targets[var])
+        del self.targets[var]
 
     def memmap(self, dumpdir):
         with open('%s/shapes.json' % dumpdir) as fp:
