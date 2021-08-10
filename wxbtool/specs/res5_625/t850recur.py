@@ -145,9 +145,10 @@ class Spec(Base2d):
         ch = len(self.setting.vars_out) * self.setting.pred_span
         _, rst = self.get_results(**result)
         _, tgt = self.get_targets(**target)
-        rst = self.weight * rst.view(-1, ch, 32, 64)
-        tgt = self.weight * tgt.view(-1, ch, 32, 64)
+        weight = self.weight.to(rst.device)
+        rst = weight * rst.view(-1, ch, 32, 64)
+        tgt = weight * tgt.view(-1, ch, 32, 64)
 
-        losst = mse(rst[:, 0], tgt[:, 0])
+        lossall = mse(rst, tgt)
 
-        return losst
+        return lossall
