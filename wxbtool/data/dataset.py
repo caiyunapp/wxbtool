@@ -65,7 +65,7 @@ class WxDataset(Dataset):
             levels_selector.append(all_levels.index(l))
         selector = np.array(levels_selector, dtype=np.int)
 
-        lastvar = None
+        lastvar, input, target = None, None, None
         size, dti, dto = self.init_holders(self.vars)
         for var, yr in product(self.vars, self.years):
             if var in vars3d:
@@ -90,11 +90,16 @@ class WxDataset(Dataset):
 
             lastvar = var
 
-        self.size = size // len(self.vars)
-        logger.info('total %s items loaded!', self.size)
+        # dump the last
+        self.inputs[lastvar] = input
+        self.targets[lastvar] = target
+        self.dump_var(dumpdir, lastvar)
 
         with open('%s/shapes.json' % dumpdir, mode='w') as fp:
             json.dump(self.shapes, fp)
+
+        self.size = size // len(self.vars)
+        logger.info('total %s items loaded!', self.size)
 
     def init_holders(self, vars):
         return 0, {k: [] for k in vars}, {k: [] for k in vars}
