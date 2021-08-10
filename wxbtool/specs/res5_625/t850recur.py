@@ -142,10 +142,11 @@ class Spec(Base2d):
         raise NotImplementedError('Spec is abstract and can not be initialized')
 
     def lossfun(self, inputs, result, target):
+        ch = len(self.setting.vars_out) * len(self.setting.pred_span)
         _, rst = self.get_results(**result)
         _, tgt = self.get_targets(**target)
-        rst = self.weight * rst.view(-1, 1, 32, 64)
-        tgt = self.weight * tgt.view(-1, 1, 32, 64)
+        rst = self.weight * rst.view(-1, ch, 32, 64)
+        tgt = self.weight * tgt.view(-1, ch, 32, 64)
 
         losst = mse(rst[:, 0], tgt[:, 0])
 
