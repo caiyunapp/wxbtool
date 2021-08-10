@@ -119,12 +119,12 @@ class Spec(Base2d):
         ), dim=1)
 
     def get_results(self, **kwargs):
-        z500 = denorm_z500(kwargs['z500'])
-        z1000 = denorm_z1000(kwargs['z1000'])
-        tau = denorm_tau(kwargs['tau'])
-        t850 = denorm_t850(kwargs['t850'])
-        t2m = denorm_t2m(kwargs['t2m'])
-        tisr = denorm_tisr(kwargs['tisr'])
+        z500 = kwargs['z500']
+        z1000 = kwargs['z1000']
+        tau = kwargs['tau']
+        t850 = kwargs['t850']
+        t2m = kwargs['t2m']
+        tisr = kwargs['tisr']
         return {
             'z500': z500,
             'z1000': z1000,
