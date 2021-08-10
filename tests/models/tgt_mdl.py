@@ -12,7 +12,7 @@ import numpy as np
 import torch as th
 
 from torch.utils.data import Dataset
-from leibniz.nn.net.mlp import MLP2d
+from leibniz.nn.net.simple import SimpleCNN2d
 from wxbtool.data.variables import vars3d
 from wxbtool.specs.res5_625.t850rasp import Spec, Setting3d
 
@@ -40,7 +40,7 @@ class TgtMdl(Spec):
     def __init__(self, setting):
         super().__init__(setting)
         self.name = 'tgt_mdl'
-        self.mlp = MLP2d(self.setting.input_span * len(self.setting.vars_in) + self.constant_size + 2, 1)
+        self.mlp = SimpleCNN2d(self.setting.input_span * len(self.setting.vars_in) + self.constant_size + 2, 1)
 
     def load_dataset(self, phase, mode, **kwargs):
         self.phase = phase
