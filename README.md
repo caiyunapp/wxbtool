@@ -1,5 +1,7 @@
 # wxbtool
 
+[![DOI](https://zenodo.org/badge/269931312.svg)](https://zenodo.org/badge/latestdoi/269931312)
+
 A toolkit for WeatherBench based on PyTorch
 
 Install
