@@ -39,7 +39,6 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
     global scheduler
     optimizer = th.optim.Adam(mdl.parameters(), lr=lr, weight_decay=wd)
     scheduler = ReduceLROnPlateau(optimizer, 'min')
-    scaler = th.cuda.amp.GradScaler()
 
     try:
         if not embbed and opt.load != '':
@@ -78,14 +77,12 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
                 mdl.weight = mdl.weight.cuda()
 
             optimizer.zero_grad()
-            with th.cuda.amp.autocast():
-                results = mdl(*[], **inputs)
-                loss = mdl.lossfun(inputs, results, targets)
+            results = mdl(*[], **inputs)
+            loss = mdl.lossfun(inputs, results, targets)
 
-            scaler.scale(loss).backward()
+            loss.backward()
             clip_grad_norm(mdl.parameters(), mdl.clipping_threshold)
-            scaler.step(optimizer)
-            scaler.update()
+            optimizer.step()
 
             logger.info(f'Epoch: {epoch + 1:03d} | Step: {step + 1:03d} | Loss: {loss.item()}')
 
