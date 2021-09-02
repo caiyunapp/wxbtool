@@ -193,6 +193,7 @@ def train_model(opt, mdl, lr=0.001, wd=0.0, callback=None, model_path=None, logg
 def main(context, opt):
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
     try:
+        sys.path.insert(0, os.getcwd())
         mdm = importlib.import_module(opt.module, package=None)
 
         name = mdm.model.name
@@ -219,5 +220,10 @@ def main(context, opt):
 
         print('Training Finished!')
     except ImportError as e:
+        exc_info = sys.exc_info()
+        print(e)
         print('failure when loading model')
-        raise e
+        import traceback
+        traceback.print_exception(*exc_info)
+        del exc_info
+        sys.exit(-1)

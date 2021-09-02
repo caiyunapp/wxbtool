@@ -110,6 +110,7 @@ def test_model(opt, mdl, logger=None):
 def main(context, opt):
     try:
         os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+        sys.path.insert(0, os.getcwd())
         mdm = importlib.import_module(opt.module, package=None)
 
         name = mdm.model.name
@@ -133,5 +134,10 @@ def main(context, opt):
             test_model(opt, mdm.model, logger=logger)
         print('Test Finished!')
     except ImportError as e:
+        exc_info = sys.exc_info()
+        print(e)
         print('failure when loading model')
-        raise e
+        import traceback
+        traceback.print_exception(*exc_info)
+        del exc_info
+        sys.exit(-1)
