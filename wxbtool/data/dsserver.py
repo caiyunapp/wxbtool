@@ -38,11 +38,16 @@ def init(opt):
     logger.info(str(opt))
 
     try:
+        sys.path.insert(0, os.getcwd())
         mdm = importlib.import_module(opt.module, package=None)
         setting = getattr(mdm, opt.setting)()
         spec = getattr(mdm, 'Spec')(setting)
     except ImportError as e:
+        exc_info = sys.exc_info()
         print('failure when loading model')
+        import traceback
+        traceback.print_exception(*exc_info)
+        del exc_info
         sys.exit(1)
 
     spec.load_dataset('train', 'server')
