@@ -111,7 +111,7 @@ class WxDataset(Dataset):
         dt = np.array(ds[codes[var]].data, dtype=np.float32)
         logger.info('%s[%d]: %s', var, year, str(dt.shape))
 
-        length = 365 * 24 - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
+        length = dt.shape[0] - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
         dti, dto = (
             np.zeros([length, self.input_span, self.width, self.length], dtype=np.float32),
             np.zeros([length, self.pred_span, self.width, self.length], dtype=np.float32)
@@ -137,7 +137,7 @@ class WxDataset(Dataset):
 
         height = selector.shape[0]
 
-        length = 365 * 24 - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
+        length = dt.shape[0] - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
         dti, dto = (
             np.zeros([length, self.input_span, height, self.width, self.length], dtype=np.float32),
             np.zeros([length, self.pred_span, height, self.width, self.length], dtype=np.float32)
