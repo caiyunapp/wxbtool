@@ -178,7 +178,7 @@ def denorm_tcc(tcc):
 
 
 def denorm_tp(tp):
-    return np.exp((tp * 0.1847837422860926 + 0.07109370560218127) + np.log(0.001)) - 0.001
+    return th.exp((tp * 0.1847837422860926 + 0.07109370560218127) + np.log(0.001)) - 0.001
 
 
 def denorm_tisr(tisr):
