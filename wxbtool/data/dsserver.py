@@ -129,8 +129,9 @@ def main(context, opt):
     print("port: %s" % opt.port)
     print("workers: %s" % opt.workers)
 
-    options = {
-        'bind': '%s:%s' % (opt.ip, opt.port),
-        'workers': opt.workers,
-    }
-    StandaloneApplication(app, options).run()
+    if opt.test == 'false':
+        options = {
+            'bind': '%s:%s' % (opt.ip, opt.port),
+            'workers': opt.workers,
+        }
+        StandaloneApplication(app, options).run()

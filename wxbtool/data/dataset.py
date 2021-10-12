@@ -25,6 +25,13 @@ logger = logging.getLogger()
 all_levels = ['50', '100', '150', '200', '250', '300', '400', '500', '600', '700', '850', '925', '1000']
 
 
+class WindowArray(type(np.zeros(0, dtype=np.float32))):
+
+    def __new__(subtype, orig, shift=0, step=1):
+        shape = [orig.shape[_] for _ in range(len(orig.shape))]
+        self = np.ndarray.__new__(subtype, shape, dtype=np.float32, buffer=orig.tobytes())[shift::step]
+        return self
+
 class WxDataset(Dataset):
     def __init__(self, root, resolution, years, vars, levels, step=1, input_span=2, pred_shift=24, pred_span=1):
         self.root = root
@@ -39,9 +46,9 @@ class WxDataset(Dataset):
         self.inputs = {}
         self.targets = {}
         self.shapes = {
-            'inputs': {},
-            'targets': {},
+            'data': {},
         }
+        self.accumulated = {}
 
         if resolution == '5.625deg':
             self.height = 13
@@ -65,25 +72,19 @@ class WxDataset(Dataset):
             levels_selector.append(all_levels.index(l))
         selector = np.array(levels_selector, dtype=np.int)
 
-        lastvar, input, target = None, None, None
-        size, dti, dto = self.init_holders(self.vars)
+        size, lastvar, input, target = 0, None, None, None
         for var, yr in product(self.vars, self.years):
             if var in vars3d:
-                length, chi, cho = self.load_3ddata(yr, var, selector)
+                length = self.load_3ddata(yr, var, selector, self.accumulated)
             elif var in vars2d:
-                length, chi, cho = self.load_2ddata(yr, var)
+                length = self.load_2ddata(yr, var, self.accumulated)
             else:
                 raise ValueError('variable %s dose not supported!' % var)
             size = size + length
-            dti[var].append(chi)
-            dto[var].append(cho)
 
             if lastvar and lastvar != var:
-                input = np.concatenate(tuple(dti[lastvar]), axis=0)
-                target = np.concatenate(tuple(dto[lastvar]), axis=0)
-                dti[lastvar] = None
-                dto[lastvar] = None
-
+                input = dti[lastvar]
+                target = dto[lastvar]
                 self.inputs[lastvar] = input
                 self.targets[lastvar] = target
                 self.dump_var(dumpdir, lastvar)
@@ -101,99 +102,80 @@ class WxDataset(Dataset):
         self.size = size // len(self.vars)
         logger.info('total %s items loaded!', self.size)
 
-    def init_holders(self, vars):
-        return 0, {k: [] for k in vars}, {k: [] for k in vars}
-
-    def load_2ddata(self, year, var):
+    def load_2ddata(self, year, var, accumlated):
         data_path = '%s/%s/%s_%d_%s.nc' % (self.root, var, var, year, self.resolution)
         ds = xr.open_dataset(data_path)
         ds = ds.transpose('time', 'lat', 'lon')
-        dt = np.array(ds[codes[var]].data, dtype=np.float32)
-        logger.info('%s[%d]: %s', var, year, str(dt.shape))
-
-        length = dt.shape[0] - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
-        dti, dto = (
-            np.zeros([length, self.input_span, self.width, self.length], dtype=np.float32),
-            np.zeros([length, self.pred_span, self.width, self.length], dtype=np.float32)
-        )
-
-        for ix in range(0, length):
-            pt = ix
-            for jx in range(self.input_span):
-                dti[pt, jx, :, :] = dt[ix + jx * self.step, :, :]
-            for kx in range(self.pred_span):
-                dto[pt, kx, :, :] = dt[ix + self.pred_shift + kx * self.step, :, :]
+        if var not in accumlated:
+            accumlated[var] = np.array(ds[codes[var]].data, dtype=np.float32)
+        else:
+            accumlated[var] = np.concatenate([accumlated[var], np.array(ds[codes[var]].data, dtype=np.float32)], axis=0)
+        logger.info('%s[%d]: %s', var, year, str(accumlated[var].shape))
 
         ds.close()
 
-        return length, dti, dto
+        return accumlated[var].shape[0]
 
-    def load_3ddata(self, year, var, selector):
+    def load_3ddata(self, year, var, selector, accumlated):
         data_path = '%s/%s/%s_%d_%s.nc' % (self.root, var, var, year, self.resolution)
         ds = xr.open_dataset(data_path)
         ds = ds.transpose('time', 'level', 'lat', 'lon')
-        dt = np.array(ds[codes[var]].data, dtype=np.float32)
+        if var not in accumlated:
+            accumlated[var] = np.array(ds[codes[var]].data, dtype=np.float32)
+        else:
+            accumlated[var] = np.concatenate([accumlated[var], np.array(ds[codes[var]].data, dtype=np.float32)], axis=0)
         logger.info('%s[%d]: %s', var, year, str(dt.shape))
-
-        height = selector.shape[0]
-
-        length = dt.shape[0] - (self.input_span * self.step + self.pred_span * self.step + self.pred_shift)
-        dti, dto = (
-            np.zeros([length, self.input_span, height, self.width, self.length], dtype=np.float32),
-            np.zeros([length, self.pred_span, height, self.width, self.length], dtype=np.float32)
-        )
-
-        for ix in range(0, length):
-            pt = ix
-            for jx in range(self.input_span):
-                dti[pt, jx, :, :, :] = dt[ix + jx * self.step, selector, :, :]
-            for kx in range(self.pred_span):
-                dto[pt, kx, :, :, :] = dt[ix + self.pred_shift + kx * self.step, selector, :, :]
-
         ds.close()
 
-        return length, dti, dto
+        return accumlated[var].shape[0]
 
     def dump_var(self, dumpdir, var):
-        input_dump = '%s/input_%s.npy' % (dumpdir, var)
-        target_dump = '%s/target_%s.npy' % (dumpdir, var)
-
-        self.shapes['inputs'][var] = self.inputs[var].shape
-        np.save(input_dump, self.inputs[var])
-        del self.inputs[var]
-
-        self.shapes['targets'][var] = self.targets[var].shape
-        np.save(target_dump, self.targets[var])
-        del self.targets[var]
+        file_dump = '%s/%s.npy' % (dumpdir, var)
+        self.shapes['data'][var] = self.accumulated[var].shape
+        np.save(file_dump, self.accumulated[var])
+        del self.accumulated[var]
 
     def memmap(self, dumpdir):
         with open('%s/shapes.json' % dumpdir) as fp:
             shapes = json.load(fp)
 
         for var in self.vars:
-            input_dump = '%s/input_%s.npy' % (dumpdir, var)
-            target_dump = '%s/target_%s.npy' % (dumpdir, var)
+            file_dump = '%s/%s.npy' % (dumpdir, var)
 
-            shape = shapes['inputs'][var]
+            shape = shapes['data'][var]
             total_size = np.prod(shape)
-            input = np.memmap(input_dump, dtype=np.float32, mode='r')
-            shift = input.shape[0] - total_size
-            self.inputs[var] = np.reshape(input[shift:], shape)
+            data = np.memmap(file_dump, dtype=np.float32, mode='r')
+            shift = data.shape[0] - total_size
+            self.accumulated[var] = np.reshape(data[shift:], shape)
 
-            shape = shapes['targets'][var]
-            total_size = np.prod(shape)
-            target = np.memmap(target_dump, dtype=np.float32, mode='r')
-            shift = target.shape[0] - total_size
-            self.targets[var] = np.reshape(target[shift:], shape)
+            if var in vars2d:
+                self.inputs[var] = WindowArray(self.accumulated[var], shift=self.input_span * self.step, step=self.step)
+                self.targets[var] = WindowArray(self.accumulated[var], shift=self.pred_span * self.step + self.pred_shift, step=self.step)
+            if var in vars3d:
+                self.inputs[var] = WindowArray(self.accumulated[var], shift=self.input_span * self.step, step=self.step)
+                self.targets[var] = WindowArray(self.accumulated[var], shift=self.pred_span * self.step + self.pred_shift, step=self.step)
 
     def __len__(self):
-        return self.inputs[self.vars[0]].shape[0]
+        return self.accumulated[self.vars[0]].shape[0] - self.input_span * self.step - self.pred_shift
 
     def __getitem__(self, item):
+        pointer = item + self.input_span * self.step
         inputs, targets = {}, {}
         for var in self.vars:
-            inputs.update({var: self.inputs[var][item:item+1]})
-            targets.update({var: self.targets[var][item:item+1]})
+            if var in vars2d:
+                inputs.update({var:
+                        np.concatenate([np.array(self.inputs[var][pointer + ix], dtype=np.float32) for ix in range(self.input_span)], axis=0)
+                })
+                targets.update({var:
+                        np.concatenate([np.array(self.targets[var][pointer + ix], dtype=np.float32) for ix in range(self.pred_span)], axis=0)
+                })
+            if var in vars3d:
+                inputs.update({var:
+                        np.concatenate([np.array(self.inputs[var][pointer + ix], dtype=np.float32) for ix in range(self.input_span)], axis=0)
+                })
+                targets.update({var:
+                        np.concatenate([np.array(self.targets[var][pointer + ix], dtype=np.float32) for ix in range(self.pred_span)], axis=0)
+                })
         return inputs, targets
 
 

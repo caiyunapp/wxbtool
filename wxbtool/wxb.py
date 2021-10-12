@@ -21,6 +21,8 @@ def dserve(parser, context, args):
         help="module of a metrological model to load")
     parser.add_argument("-s", "--setting", type=str, default='Setting',
         help="setting for a metrological model spec")
+    parser.add_argument("-t", "--test", type=str, default='false',
+        help="setting for test")
     opt = parser.parse_args(args)
 
     dsmain(context, opt)
